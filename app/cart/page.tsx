@@ -7,7 +7,7 @@ import { motion } from 'framer-motion'
 import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import Navigation from '@/components/Navigation'
-import RazorpayPayment from '@/components/RazorpayPayment'
+import PaymentInterface from '@/components/PaymentInterface'
 import { useCartStore } from '@/lib/store'
 import toast from 'react-hot-toast'
 
@@ -238,15 +238,15 @@ export default function CartPage() {
                   </div>
                 </div>
 
-                <RazorpayPayment
-                  onSuccess={() => {
-                    toast.success('Payment successful! Order placed.')
-                    router.push('/orders')
-                  }}
-                  onError={() => {
-                    toast.error('Payment failed. Please try again.')
-                  }}
-                />
+        <PaymentInterface
+          onSuccess={() => {
+            toast.success('Payment successful! Order placed.')
+            router.push('/orders')
+          }}
+          onError={() => {
+            toast.error('Payment failed. Please try again.')
+          }}
+        />
 
                 <button
                   onClick={clearCart}

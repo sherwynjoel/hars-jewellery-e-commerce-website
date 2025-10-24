@@ -40,10 +40,12 @@ export default function RazorpayPayment({ onSuccess, onError }: RazorpayPaymentP
     setLoading(true)
 
     try {
-      // For now, always use development mode (direct order creation)
-      const isDevelopment = true
+      // Check if we're in development mode with placeholder credentials
+      const isDevelopment = process.env.NODE_ENV === 'development'
+      const hasPlaceholderKeys = process.env.RAZORPAY_KEY_ID?.includes('placeholder') || 
+                                 process.env.RAZORPAY_KEY_ID === 'rzp_test_placeholder'
       
-      if (isDevelopment) {
+      if (isDevelopment && hasPlaceholderKeys) {
         // For development, create order directly without payment
         const orderResponse = await fetch('/api/orders', {
           method: 'POST',
@@ -177,7 +179,10 @@ export default function RazorpayPayment({ onSuccess, onError }: RazorpayPaymentP
     }
   }
 
-  const isDevMode = true // Always in development mode for now
+  const isDevelopment = process.env.NODE_ENV === 'development'
+  const hasPlaceholderKeys = process.env.RAZORPAY_KEY_ID?.includes('placeholder') || 
+                             process.env.RAZORPAY_KEY_ID === 'rzp_test_placeholder'
+  const isDevMode = isDevelopment && hasPlaceholderKeys
 
   return (
     <button
