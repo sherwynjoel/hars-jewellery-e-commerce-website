@@ -67,6 +67,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
             className="object-cover transition-transform duration-300 group-hover:scale-110"
+            priority={index < 4} // Prioritize first 4 images
           />
           
           {/* Overlay */}
