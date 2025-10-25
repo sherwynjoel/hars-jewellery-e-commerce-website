@@ -7,7 +7,7 @@ import { motion } from 'framer-motion'
 import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import Navigation from '@/components/Navigation'
-import RealPaymentInterface from '@/components/RealPaymentInterface'
+import RazorpayPaymentGateway from '@/components/RazorpayPaymentGateway'
 import { useCartStore } from '@/lib/store'
 import toast from 'react-hot-toast'
 
@@ -238,7 +238,7 @@ export default function CartPage() {
                   </div>
                 </div>
 
-        <RealPaymentInterface
+        <RazorpayPaymentGateway
           onSuccess={() => {
             toast.success('Payment successful! Order placed.')
             router.push('/orders')

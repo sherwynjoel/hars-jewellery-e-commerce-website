@@ -18,8 +18,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing payment details' }, { status: 400 })
     }
 
-    // Verify payment signature
-    const razorpaySecret = process.env.RAZORPAY_KEY_SECRET || 'test_secret_placeholder'
+          // Verify payment signature
+          const razorpaySecret = process.env.RAZORPAY_KEY_SECRET
     const body = razorpay_order_id + '|' + razorpay_payment_id
     const expectedSignature = crypto
       .createHmac('sha256', razorpaySecret)
