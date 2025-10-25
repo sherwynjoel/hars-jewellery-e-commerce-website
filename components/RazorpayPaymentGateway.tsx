@@ -52,43 +52,8 @@ export default function RazorpayPaymentGateway({ onSuccess, onError }: RazorpayP
     setLoading(true)
 
     try {
-      // Check if we have real Razorpay keys
-      const hasRealKeys = process.env.RAZORPAY_KEY_ID && 
-                         !process.env.RAZORPAY_KEY_ID.includes('placeholder') &&
-                         process.env.RAZORPAY_KEY_SECRET &&
-                         !process.env.RAZORPAY_KEY_SECRET.includes('placeholder')
-
-      if (!hasRealKeys) {
-        // Development mode - create order directly
-        toast.info('Development Mode: Creating order without payment gateway')
-        
-        const orderResponse = await fetch('/api/orders', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            items: items.map(item => ({
-              productId: item.id,
-              quantity: item.quantity,
-              price: item.price
-            })),
-            total: getTotalWithTax()
-          })
-        })
-
-        if (orderResponse.ok) {
-          const orderData = await orderResponse.json()
-          toast.success(`Development Mode: Order #${orderData.id.slice(-8).toUpperCase()} created successfully!`)
-          clearCart()
-          onSuccess()
-          router.push('/orders')
-        } else {
-          const errorData = await orderResponse.json()
-          throw new Error(errorData.error || 'Failed to create order')
-        }
-        return
-      }
+      // Try to create Razorpay order first
+      // If it fails due to authentication, fall back to development mode
 
       // Create Razorpay order
       const response = await fetch('/api/payment/create-order', {
@@ -105,6 +70,39 @@ export default function RazorpayPaymentGateway({ onSuccess, onError }: RazorpayP
 
       if (!response.ok) {
         const errorData = await response.json()
+        
+        // If authentication failed, fall back to development mode
+        if (errorData.error && errorData.error.includes('Authentication failed')) {
+          toast.info('Development Mode: Creating order without payment gateway')
+          
+          const orderResponse = await fetch('/api/orders', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              items: items.map(item => ({
+                productId: item.id,
+                quantity: item.quantity,
+                price: item.price
+              })),
+              total: getTotalWithTax()
+            })
+          })
+
+          if (orderResponse.ok) {
+            const orderData = await orderResponse.json()
+            toast.success(`Development Mode: Order #${orderData.id.slice(-8).toUpperCase()} created successfully!`)
+            clearCart()
+            onSuccess()
+            router.push('/orders')
+          } else {
+            const orderErrorData = await orderResponse.json()
+            throw new Error(orderErrorData.error || 'Failed to create order')
+          }
+          return
+        }
+        
         throw new Error(errorData.error || 'Failed to create payment order')
       }
 
@@ -186,11 +184,6 @@ export default function RazorpayPaymentGateway({ onSuccess, onError }: RazorpayP
     }
   }
 
-  const hasRealKeys = process.env.RAZORPAY_KEY_ID && 
-                     !process.env.RAZORPAY_KEY_ID.includes('placeholder') &&
-                     process.env.RAZORPAY_KEY_SECRET &&
-                     !process.env.RAZORPAY_KEY_SECRET.includes('placeholder')
-
   return (
     <motion.button
       whileHover={{ scale: 1.02 }}
@@ -207,12 +200,7 @@ export default function RazorpayPaymentGateway({ onSuccess, onError }: RazorpayP
       ) : (
         <>
           <CreditCard className="w-5 h-5" />
-          <span>
-            {hasRealKeys 
-              ? `Pay ₹${getTotalWithTax().toLocaleString('en-IN')}` 
-              : `Proceed to Pay ₹${getTotalWithTax().toLocaleString('en-IN')} (Dev Mode)`
-            }
-          </span>
+          <span>Pay ₹{getTotalWithTax().toLocaleString('en-IN')}</span>
         </>
       )}
     </motion.button>
