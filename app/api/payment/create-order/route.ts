@@ -32,6 +32,7 @@ export async function POST(request: NextRequest) {
         userId: session.user.id,
         userEmail: session.user.email,
         businessEmail: 'harsjewelleryst@gmail.com',
+        businessPhone: '+919659393459',
       }
     })
 

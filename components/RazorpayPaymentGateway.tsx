@@ -119,7 +119,7 @@ export default function RazorpayPaymentGateway({ onSuccess, onError }: RazorpayP
         prefill: {
           name: 'Customer',
           email: 'harsjewelleryst@gmail.com',
-          contact: '+91XXXXXXXXXX'
+          contact: '+919659393459'
         },
         notes: {
           address: 'Jewelry Store Address'
