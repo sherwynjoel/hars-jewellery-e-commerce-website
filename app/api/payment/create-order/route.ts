@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
       notes: {
         userId: session.user.id,
         userEmail: session.user.email,
+        businessEmail: 'harsjewelleryst@gmail.com',
       }
     })
 

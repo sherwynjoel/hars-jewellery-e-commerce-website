@@ -118,7 +118,7 @@ export default function RazorpayPaymentGateway({ onSuccess, onError }: RazorpayP
         },
         prefill: {
           name: 'Customer',
-          email: 'customer@example.com',
+          email: 'harsjewelleryst@gmail.com',
           contact: '+91XXXXXXXXXX'
         },
         notes: {
