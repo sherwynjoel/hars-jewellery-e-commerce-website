@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { revalidatePath } from 'next/cache'
+
+export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   try {
@@ -7,6 +10,7 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category')
     const limit = searchParams.get('limit')
     const search = searchParams.get('search')
+    const sort = searchParams.get('sort')
 
     const where = {
       ...(category && { category }),
@@ -18,13 +22,25 @@ export async function GET(request: NextRequest) {
       })
     }
 
+    // Determine sorting
+    let orderBy: any = { createdAt: 'desc' }
+    if (sort === 'price-asc') orderBy = { price: 'asc' }
+    else if (sort === 'price-desc') orderBy = { price: 'desc' }
+    else if (sort === 'name-asc') orderBy = { name: 'asc' }
+    else if (sort === 'newest') orderBy = { createdAt: 'desc' }
+
     const products = await prisma.product.findMany({
       where,
       take: limit ? parseInt(limit) : undefined,
-      orderBy: { createdAt: 'desc' }
+      orderBy
     })
 
-    return NextResponse.json(products)
+    return new NextResponse(JSON.stringify(products), {
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store'
+      }
+    })
   } catch (error) {
     console.error('Error fetching products:', error)
     return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 })
@@ -48,7 +64,20 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    return NextResponse.json(product)
+    // Ensure pages show updated data immediately after mutations
+    try {
+      revalidatePath('/')
+      revalidatePath('/collections')
+    } catch (e) {
+      // no-op if revalidation is not available in this context
+    }
+
+    return new NextResponse(JSON.stringify(product), {
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store'
+      }
+    })
   } catch (error) {
     console.error('Error creating product:', error)
     return NextResponse.json({ error: 'Failed to create product' }, { status: 500 })

@@ -14,9 +14,18 @@ export async function POST(request: NextRequest) {
     const { action } = await request.json()
     
     if (action === 'deploy') {
-      // Trigger deployment webhook
-      const webhookUrl = process.env.DEPLOY_WEBHOOK_URL || 'http://localhost:3000/api/webhook/deploy'
-      
+      // In development, short-circuit to avoid webhook/network/OS script issues
+      if (process.env.NODE_ENV !== 'production') {
+        return NextResponse.json({ 
+          message: 'Deployment simulated in development mode', 
+          status: 'success' 
+        })
+      }
+      // Trigger deployment webhook (prefer same-origin during dev)
+      const origin = request.nextUrl.origin
+      const defaultUrl = new URL('/api/webhook/deploy', origin).toString()
+      const webhookUrl = process.env.DEPLOY_WEBHOOK_URL || defaultUrl
+
       const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
@@ -31,8 +40,10 @@ export async function POST(request: NextRequest) {
           status: 'success'
         })
       } else {
+        const text = await response.text().catch(() => '')
         return NextResponse.json({ 
           error: 'Failed to trigger deployment',
+          details: text || response.statusText,
           status: 'error'
         }, { status: 500 })
       }

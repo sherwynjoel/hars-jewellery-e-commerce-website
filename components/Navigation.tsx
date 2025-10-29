@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useSession, signOut } from 'next-auth/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ShoppingCart, User, Menu, X, Crown, Heart } from 'lucide-react'
@@ -11,6 +12,11 @@ export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const { data: session } = useSession()
   const { getTotalItems, getTotalWithTax } = useCartStore()
+  // Avoid hydration mismatch by rendering cart count only after mount
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const navItems = [
     { name: 'Home', href: '/' },
@@ -23,8 +29,8 @@ export default function Navigation() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-gold-400 to-gold-600 rounded-full flex items-center justify-center">
-              <Crown className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 rounded-full overflow-hidden ring-1 ring-gray-200 bg-white">
+              <Image src="/logo%20hars.png" alt="Hars Jewellery" width={40} height={40} priority />
             </div>
             <div className="font-serif text-xl sm:text-2xl font-bold text-gray-900">
               Hars Jewellery
@@ -49,15 +55,15 @@ export default function Navigation() {
             {/* Cart */}
             <Link href="/cart" className="relative p-2 text-gray-700 hover:text-gold-600 transition-colors">
               <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6" />
-              {getTotalItems() > 0 && (
-                <motion.span
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute -top-1 -right-1 bg-gold-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium"
-                >
-                  {getTotalItems()}
-                </motion.span>
-              )}
+              {/* Render a stable badge element to prevent hydration mismatch */}
+              <span
+                className={`absolute -top-1 -right-1 bg-gold-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium transition-transform duration-150 ${
+                  mounted && getTotalItems() > 0 ? 'scale-100' : 'scale-0'
+                }`}
+                aria-hidden={!mounted || getTotalItems() === 0}
+              >
+                {mounted ? getTotalItems() : 0}
+              </span>
             </Link>
 
             {/* User Menu */}
@@ -77,6 +83,12 @@ export default function Navigation() {
                   className="p-2 text-gray-700 hover:text-gold-600 transition-colors"
                 >
                   <User className="w-5 h-5" />
+                </Link>
+                <Link
+                  href="/orders"
+                  className="text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                >
+                  My Orders
                 </Link>
                 <button
                   onClick={() => signOut()}
@@ -132,6 +144,15 @@ export default function Navigation() {
                     {item.name}
                   </Link>
                 ))}
+                {session && (
+                  <Link
+                    href="/orders"
+                    className="block px-4 py-2 text-gray-700 hover:text-gold-600 hover:bg-gray-50 rounded-lg transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    My Orders
+                  </Link>
+                )}
               </div>
             </motion.div>
           )}

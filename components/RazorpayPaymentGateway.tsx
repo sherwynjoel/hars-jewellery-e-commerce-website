@@ -10,6 +10,16 @@ import { CreditCard, Loader2 } from 'lucide-react'
 interface RazorpayPaymentGatewayProps {
   onSuccess: () => void
   onError: () => void
+  customer?: {
+    name: string
+    email: string
+    phone: string
+    addressLine1: string
+    addressLine2?: string
+    city: string
+    state: string
+    postalCode: string
+  }
 }
 
 declare global {
@@ -18,7 +28,7 @@ declare global {
   }
 }
 
-export default function RazorpayPaymentGateway({ onSuccess, onError }: RazorpayPaymentGatewayProps) {
+export default function RazorpayPaymentGateway({ onSuccess, onError, customer }: RazorpayPaymentGatewayProps) {
   const [loading, setLoading] = useState(false)
   const { items, getTotalWithTax, clearCart } = useCartStore()
   const router = useRouter()
@@ -73,7 +83,7 @@ export default function RazorpayPaymentGateway({ onSuccess, onError }: RazorpayP
         
         // If authentication failed, fall back to development mode
         if (errorData.error && errorData.error.includes('Authentication failed')) {
-          toast.info('Development Mode: Creating order without payment gateway')
+          toast('Development Mode: Creating order without payment gateway', { icon: 'ℹ️' })
           
           const orderResponse = await fetch('/api/orders', {
             method: 'POST',
@@ -86,7 +96,8 @@ export default function RazorpayPaymentGateway({ onSuccess, onError }: RazorpayP
                 quantity: item.quantity,
                 price: item.price
               })),
-              total: getTotalWithTax()
+              total: getTotalWithTax(),
+              customer
             })
           })
 
@@ -133,7 +144,8 @@ export default function RazorpayPaymentGateway({ onSuccess, onError }: RazorpayP
                   quantity: item.quantity,
                   price: item.price
                 })),
-                total: getTotalWithTax()
+                total: getTotalWithTax(),
+                customer
               })
             })
 
@@ -153,12 +165,16 @@ export default function RazorpayPaymentGateway({ onSuccess, onError }: RazorpayP
           }
         },
         prefill: {
-          name: 'Customer',
-          email: 'harsjewelleryst@gmail.com',
-          contact: '+919659393459'
+          name: customer?.name || 'Customer',
+          email: customer?.email || 'harsjewelleryst@gmail.com',
+          contact: customer?.phone || '+919659393459'
         },
         notes: {
-          address: 'Jewelry Store Address'
+          address: [
+            customer?.addressLine1,
+            customer?.addressLine2,
+            [customer?.city, customer?.state, customer?.postalCode].filter(Boolean).join(', ')
+          ].filter(Boolean).join(', ')
         },
         theme: {
           color: '#f59e0b'
@@ -189,7 +205,7 @@ export default function RazorpayPaymentGateway({ onSuccess, onError }: RazorpayP
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       onClick={handlePayment}
-      disabled={loading || items.length === 0}
+      disabled={loading || items.length === 0 || !customer || !customer.name || !customer.email || !customer.phone || !customer.addressLine1 || !customer.city || !customer.state || !customer.postalCode}
       className="w-full bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-600 hover:to-gold-700 text-white font-semibold py-4 px-6 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center space-x-2"
     >
       {loading ? (

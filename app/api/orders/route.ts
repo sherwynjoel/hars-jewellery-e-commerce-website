@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     console.log('Order API: Request body:', { itemsCount: body.items?.length, total: body.total })
     console.log('Order API: Items details:', body.items)
 
-    const { items, total } = body
+    const { items, total, customer } = body
 
     if (!items || items.length === 0) {
       console.log('Order API: No items provided')
@@ -41,6 +41,14 @@ export async function POST(request: NextRequest) {
       data: {
         userId: session.user.id,
         total: orderTotal,
+        customerName: customer?.name ?? session.user.name ?? 'Customer',
+        email: customer?.email ?? session.user.email,
+        phone: customer?.phone ?? '',
+        addressLine1: customer?.addressLine1 ?? '',
+        addressLine2: customer?.addressLine2 ?? null,
+        city: customer?.city ?? '',
+        state: customer?.state ?? '',
+        postalCode: customer?.postalCode ?? '',
         items: {
           create: items.map((item: any) => ({
             productId: item.productId,

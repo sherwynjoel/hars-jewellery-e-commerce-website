@@ -11,6 +11,7 @@ export const metadata: Metadata = {
   title: 'Hars Jewellery - Premium Jewelry Collection',
   description: 'Discover our exquisite collection of premium jewelry. Handcrafted pieces that celebrate elegance and luxury.',
   keywords: 'jewelry, gold, diamonds, luxury, premium, handcrafted',
+  manifest: '/manifest.webmanifest',
 }
 
 export const viewport = {

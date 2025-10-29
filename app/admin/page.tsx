@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
@@ -133,6 +134,13 @@ export default function AdminPanel() {
                   <span className="sm:hidden">Add</span>
                 </motion.button>
                 
+                <Link
+                  href="/admin/orders"
+                  className="btn-secondary inline-flex items-center justify-center text-sm sm:text-base px-4 sm:px-6 py-2 sm:py-3"
+                >
+                  Manage Orders
+                </Link>
+
                 <DeployButton />
               </div>
             </div>

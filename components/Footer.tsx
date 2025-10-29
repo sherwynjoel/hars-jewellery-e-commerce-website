@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Crown, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Youtube } from 'lucide-react'
 
 export default function Footer() {
@@ -26,8 +27,8 @@ export default function Footer() {
             className="text-center md:text-left"
           >
             <Link href="/" className="flex items-center justify-center md:justify-start space-x-2 mb-6">
-              <div className="w-10 h-10 bg-gradient-to-br from-gold-400 to-gold-600 rounded-full flex items-center justify-center">
-                <Crown className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 rounded-full overflow-hidden ring-1 ring-gray-700 bg-white">
+                <Image src="/logo%20hars.png" alt="Hars Jewellery" width={40} height={40} />
               </div>
               <span className="font-serif text-2xl font-bold">
                 Hars Jewellery
@@ -49,7 +50,7 @@ export default function Footer() {
               </div>
               <div className="flex items-center justify-center md:justify-start space-x-3 text-gray-300">
                 <MapPin className="w-5 h-5" />
-                <span>Mumbai, Maharashtra, India</span>
+                <span>323 A3 Kumaran Ntr Complex 1st Floor, Raja Street, Coimbatore, Tamil Nadu - 641001, India</span>
               </div>
             </div>
           </motion.div>

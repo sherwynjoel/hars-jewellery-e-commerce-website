@@ -55,7 +55,7 @@ export default function CollectionsPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="bg-white rounded-xl shadow-lg p-6 mb-8"
+            className="bg-white rounded-2xl shadow-xl p-6 mb-8 border border-gray-100"
           >
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
               {/* Category Filter */}
@@ -64,10 +64,10 @@ export default function CollectionsPage() {
                   <button
                     key={category.value}
                     onClick={() => setSelectedCategory(category.value)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border ${
                       selectedCategory === category.value
-                        ? 'bg-gold-500 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? 'bg-gold-500 text-white border-gold-500 shadow-sm'
+                        : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-200'
                     }`}
                   >
                     {category.name}
@@ -76,39 +76,65 @@ export default function CollectionsPage() {
               </div>
 
               {/* Controls */}
-              <div className="flex items-center space-x-4">
-                {/* Sort */}
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="input-field w-auto"
-                >
-                  {sortOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.name}
-                    </option>
-                  ))}
-                </select>
+              <div className="flex items-center gap-3">
+                {/* Sort (animated dropdown) */}
+                <div className="relative">
+                  <motion.button
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setShowFilters(prev => !prev)}
+                    aria-expanded={showFilters}
+                    aria-haspopup="listbox"
+                    className="inline-flex items-center gap-2 pl-4 pr-3 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-sm shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                  >
+                    {sortOptions.find(o => o.value === sortBy)?.name}
+                    <motion.span animate={{ rotate: showFilters ? 180 : 0 }} className="text-gray-500">▾</motion.span>
+                  </motion.button>
+                  <motion.ul
+                    initial={false}
+                    animate={{ opacity: showFilters ? 1 : 0, y: showFilters ? 0 : -6, pointerEvents: showFilters ? 'auto' : 'none' }}
+                    transition={{ duration: 0.15 }}
+                    role="listbox"
+                    className="absolute z-20 mt-2 w-56 rounded-xl border border-gray-200 bg-white shadow-xl overflow-hidden"
+                  >
+                    {sortOptions.map((option) => (
+                      <li key={option.value}>
+                        <button
+                          role="option"
+                          aria-selected={sortBy === option.value}
+                          onClick={() => { setSortBy(option.value); setShowFilters(false) }}
+                          className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
+                            sortBy === option.value ? 'bg-gold-50 text-gold-700' : 'hover:bg-gray-50'
+                          }`}
+                        >
+                          {option.name}
+                        </button>
+                      </li>
+                    ))}
+                  </motion.ul>
+                </div>
 
-                {/* View Mode */}
-                <div className="flex border border-gray-300 rounded-lg">
+                {/* Segmented control for view mode */}
+                <div className="inline-flex items-center rounded-xl border border-gray-200 bg-white p-1 shadow-sm">
                   <button
+                    aria-label="Grid view"
                     onClick={() => setViewMode('grid')}
-                    className={`p-2 ${
+                    className={`inline-flex items-center justify-center h-9 w-9 rounded-lg transition-all ${
                       viewMode === 'grid'
-                        ? 'bg-gold-500 text-white'
-                        : 'text-gray-600 hover:bg-gray-100'
-                    } rounded-l-lg transition-colors`}
+                        ? 'bg-gold-500 text-white shadow'
+                        : 'text-gray-600 hover:bg-gray-50'
+                    }`}
                   >
                     <Grid className="w-4 h-4" />
                   </button>
                   <button
+                    aria-label="List view"
                     onClick={() => setViewMode('list')}
-                    className={`p-2 ${
+                    className={`inline-flex items-center justify-center h-9 w-9 rounded-lg transition-all ${
                       viewMode === 'list'
-                        ? 'bg-gold-500 text-white'
-                        : 'text-gray-600 hover:bg-gray-100'
-                    } rounded-r-lg transition-colors`}
+                        ? 'bg-gold-500 text-white shadow'
+                        : 'text-gray-600 hover:bg-gray-50'
+                    }`}
                   >
                     <List className="w-4 h-4" />
                   </button>
@@ -116,8 +142,9 @@ export default function CollectionsPage() {
 
                 {/* Mobile Filter Toggle */}
                 <button
+                  aria-label="Toggle filters"
                   onClick={() => setShowFilters(!showFilters)}
-                  className="lg:hidden p-2 bg-gray-100 rounded-lg"
+                  className="lg:hidden inline-flex items-center justify-center h-10 w-10 rounded-xl border border-gray-200 bg-white text-gray-700 shadow-sm hover:bg-gray-50"
                 >
                   <Filter className="w-5 h-5" />
                 </button>
@@ -160,7 +187,7 @@ export default function CollectionsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
           >
-            <ProductGrid category={selectedCategory} />
+            <ProductGrid category={selectedCategory} sort={sortBy} />
           </motion.div>
         </div>
       </div>

@@ -26,6 +26,11 @@ interface Order {
   status: string
   createdAt: string
   items: OrderItem[]
+  trackingNumber?: string | null
+  trackingCarrier?: string | null
+  trackingUrl?: string | null
+  shippedAt?: string | null
+  deliveredAt?: string | null
 }
 
 export default function OrdersPage() {
@@ -75,6 +80,15 @@ export default function OrdersPage() {
         return 'bg-red-100 text-red-800'
       default:
         return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'PROCESSING':
+        return 'Order Placed'
+      default:
+        return status
     }
   }
 
@@ -176,7 +190,7 @@ export default function OrdersPage() {
                           {order.total.toLocaleString('en-IN')}
                         </div>
                         <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.status)}`}>
-                          {order.status}
+                          {getStatusLabel(order.status)}
                         </span>
                       </div>
                     </div>
@@ -206,6 +220,36 @@ export default function OrdersPage() {
                           </div>
                         </div>
                       ))}
+
+                        {/* Shipment Info */}
+                        <div className="p-4 bg-white rounded-lg border border-gray-200">
+                          <h4 className="text-sm font-semibold text-gray-800 mb-2">Shipment</h4>
+                          {order.trackingNumber ? (
+                            <div className="text-sm text-gray-700 space-y-1">
+                              <div>
+                                <span className="font-medium">Status: </span>
+                                {order.status === 'SHIPPED' && 'Shipped'}
+                                {order.status === 'DELIVERED' && 'Delivered'}
+                                {order.status !== 'SHIPPED' && order.status !== 'DELIVERED' && 'Preparing' }
+                              </div>
+                              <div>
+                                <span className="font-medium">Carrier: </span>
+                                {order.trackingCarrier || '—'}
+                              </div>
+                              <div>
+                                <span className="font-medium">Tracking No: </span>
+                                {order.trackingNumber}
+                              </div>
+                              {order.trackingUrl && (
+                                <div>
+                                  <a href={order.trackingUrl} target="_blank" rel="noreferrer" className="text-gold-600 hover:text-gold-700">Track shipment</a>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="text-sm text-gray-500">Shipment details will appear here once available.</div>
+                          )}
+                        </div>
                     </div>
                   </div>
                 </motion.div>

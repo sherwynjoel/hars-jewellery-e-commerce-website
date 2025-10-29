@@ -161,3 +161,6 @@
 
 **Your jewelry website is now fully mobile-optimized!** 📱💎
 
+
+
+

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
@@ -16,6 +16,52 @@ export default function CartPage() {
   const router = useRouter()
   const { items, updateQuantity, removeItem, clearCart, getTotalPrice, getTotalItems, getSubtotal, getTaxAmount, getTotalWithTax } = useCartStore()
   const [loading, setLoading] = useState(false)
+  const [customer, setCustomer] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    addressLine1: '',
+    addressLine2: '',
+    city: '',
+    state: '',
+    postalCode: ''
+  })
+
+  // Load any saved address from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('saved-address')
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        setCustomer((prev) => ({ ...prev, ...parsed }))
+      }
+    } catch {}
+  }, [])
+
+  const handleSaveAddress = () => {
+    if (!isCustomerValid()) {
+      toast.error('Please fill all required delivery details before saving.')
+      return
+    }
+    try {
+      localStorage.setItem('saved-address', JSON.stringify(customer))
+      toast.success('Address saved successfully!')
+    } catch {
+      toast.error('Failed to save address')
+    }
+  }
+
+  const isCustomerValid = () => {
+    return (
+      customer.name.trim() &&
+      customer.email.trim() &&
+      customer.phone.trim() &&
+      customer.addressLine1.trim() &&
+      customer.city.trim() &&
+      customer.state.trim() &&
+      customer.postalCode.trim()
+    )
+  }
 
   const handleCheckout = async () => {
     if (!session) {
@@ -215,6 +261,69 @@ export default function CartPage() {
                   Order Summary
                 </h2>
 
+                {/* Delivery Details */}
+                <div className="space-y-4 mb-6">
+                  <h3 className="text-sm font-semibold text-gray-800">Delivery Details</h3>
+                  <input
+                    className="input-field"
+                    placeholder="Full Name"
+                    value={customer.name}
+                    onChange={(e) => setCustomer({ ...customer, name: e.target.value })}
+                  />
+                  <input
+                    className="input-field"
+                    placeholder="Email"
+                    type="email"
+                    value={customer.email}
+                    onChange={(e) => setCustomer({ ...customer, email: e.target.value })}
+                  />
+                  <input
+                    className="input-field"
+                    placeholder="Phone Number"
+                    value={customer.phone}
+                    onChange={(e) => setCustomer({ ...customer, phone: e.target.value })}
+                  />
+                  <input
+                    className="input-field"
+                    placeholder="Address Line 1"
+                    value={customer.addressLine1}
+                    onChange={(e) => setCustomer({ ...customer, addressLine1: e.target.value })}
+                  />
+                  <input
+                    className="input-field"
+                    placeholder="Address Line 2 (optional)"
+                    value={customer.addressLine2}
+                    onChange={(e) => setCustomer({ ...customer, addressLine2: e.target.value })}
+                  />
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <input
+                      className="input-field"
+                      placeholder="City"
+                      value={customer.city}
+                      onChange={(e) => setCustomer({ ...customer, city: e.target.value })}
+                    />
+                    <input
+                      className="input-field"
+                      placeholder="State"
+                      value={customer.state}
+                      onChange={(e) => setCustomer({ ...customer, state: e.target.value })}
+                    />
+                    <input
+                      className="input-field"
+                      placeholder="Postal Code"
+                      value={customer.postalCode}
+                      onChange={(e) => setCustomer({ ...customer, postalCode: e.target.value })}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleSaveAddress}
+                    className="w-full btn-secondary"
+                  >
+                    Save Address
+                  </button>
+                </div>
+
                 <div className="space-y-4 mb-6">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Subtotal</span>
@@ -239,6 +348,7 @@ export default function CartPage() {
                 </div>
 
         <RazorpayPaymentGateway
+          customer={customer}
           onSuccess={() => {
             toast.success('Payment successful! Order placed.')
             router.push('/orders')
@@ -247,6 +357,10 @@ export default function CartPage() {
             toast.error('Payment failed. Please try again.')
           }}
         />
+
+                {!isCustomerValid() && (
+                  <p className="text-xs text-red-600 mt-2">Please fill all required delivery details before paying.</p>
+                )}
 
                 <button
                   onClick={clearCart}

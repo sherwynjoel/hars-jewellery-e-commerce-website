@@ -18,16 +18,21 @@ interface Product {
 interface ProductGridProps {
   limit?: number
   category?: string
+  sort?: string
 }
 
-export default function ProductGrid({ limit, category }: ProductGridProps) {
+export default function ProductGrid({ limit, category, sort }: ProductGridProps) {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch(`/api/products?${category ? `category=${category}` : ''}${limit ? `&limit=${limit}` : ''}`)
+        const params = new URLSearchParams()
+        if (category) params.set('category', category)
+        if (limit) params.set('limit', String(limit))
+        if (sort) params.set('sort', sort)
+        const response = await fetch(`/api/products?${params.toString()}`)
         const data = await response.json()
         setProducts(data)
       } catch (error) {
@@ -38,7 +43,7 @@ export default function ProductGrid({ limit, category }: ProductGridProps) {
     }
 
     fetchProducts()
-  }, [limit, category])
+  }, [limit, category, sort])
 
   if (loading) {
     return (

@@ -56,6 +56,21 @@ model Order {
   status    OrderStatus @default(PENDING)
   items     OrderItem[]
   user      User        @relation(fields: [userId], references: [id])
+  // Delivery/contact details
+  customerName String   @default("")
+  email        String   @default("")
+  phone        String   @default("")
+  addressLine1 String   @default("")
+  addressLine2 String?
+  city         String   @default("")
+  state        String   @default("")
+  postalCode   String   @default("")
+  // Shipment tracking
+  trackingNumber String?
+  trackingCarrier String?
+  trackingUrl     String?
+  shippedAt       DateTime?
+  deliveredAt     DateTime?
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
 }
