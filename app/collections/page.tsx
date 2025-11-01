@@ -55,23 +55,25 @@ export default function CollectionsPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="bg-white rounded-2xl shadow-xl p-6 mb-8 border border-gray-100"
+            className="card-elevated p-6 mb-8"
           >
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
               {/* Category Filter */}
               <div className="flex flex-wrap gap-2">
                 {categories.map((category) => (
-                  <button
+                  <motion.button
                     key={category.value}
                     onClick={() => setSelectedCategory(category.value)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border ${
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 border-2 ${
                       selectedCategory === category.value
-                        ? 'bg-gold-500 text-white border-gold-500 shadow-sm'
-                        : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-200'
+                        ? 'bg-gradient-to-r from-gold-500 to-gold-600 text-white border-gold-500 shadow-lg'
+                        : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-200 hover:border-gold-300'
                     }`}
                   >
                     {category.name}
-                  </button>
+                  </motion.button>
                 ))}
               </div>
 

@@ -17,6 +17,8 @@ export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [stage, setStage] = useState<'form' | 'verify'>('form')
+  const [otp, setOtp] = useState('')
   const router = useRouter()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -56,14 +58,45 @@ export default function SignUpPage() {
 
       const data = await response.json()
 
-      if (response.ok) {
-        toast.success('Account created successfully! Please sign in.')
-        router.push('/auth/signin')
+      if (response.ok || response.status === 201) {
+        if (data.verificationSent) {
+          toast.success('Account created! We sent a verification code to your email.')
+          setStage('verify')
+        } else if (data.error) {
+          toast.warning(data.error)
+          toast.info('You can still verify your email later from the verification code shown in console.')
+          console.log('Verification code (if email failed):', 'Check terminal for OTP')
+          setStage('verify')
+        } else {
+          toast.success('Account created!')
+          setStage('verify')
+        }
       } else {
         toast.error(data.error || 'Something went wrong')
       }
     } catch (error) {
       toast.error('Something went wrong')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    try {
+      const res = await fetch('/api/auth/verify-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email, code: otp })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        toast.success('Email verified! You can sign in now.')
+        router.push('/auth/signin')
+      } else {
+        toast.error(data.error || 'Invalid code')
+      }
     } finally {
       setLoading(false)
     }
@@ -89,23 +122,21 @@ export default function SignUpPage() {
           </Link>
         </div>
 
-        {/* Sign Up Form */}
+        {/* Sign Up / Verify */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="bg-white rounded-2xl shadow-xl p-8"
+          className="card-elevated p-8 sm:p-10"
         >
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-serif font-bold text-gray-900 mb-2">
-              Create Account
-            </h1>
-            <p className="text-gray-600">
-              Join us and discover our exquisite jewelry collection
-            </p>
-          </div>
+          {stage === 'form' ? (
+          <>
+            <div className="text-center mb-8">
+              <h1 className="text-3xl sm:text-4xl font-serif font-bold text-gray-900 mb-2">Create Account</h1>
+              <p className="text-gray-600 text-lg">Join us and discover our exquisite jewelry collection</p>
+            </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Full Name
@@ -199,16 +230,42 @@ export default function SignUpPage() {
             >
               {loading ? 'Creating Account...' : 'Create Account'}
             </button>
-          </form>
+            </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-gray-600">
-              Already have an account?{' '}
-              <Link href="/auth/signin" className="text-gold-600 hover:text-gold-700 font-medium">
-                Sign in here
-              </Link>
-            </p>
-          </div>
+            <div className="mt-6 text-center">
+              <p className="text-gray-600">
+                Already have an account?{' '}
+                <Link href="/auth/signin" className="text-gold-600 hover:text-gold-700 font-medium">
+                  Sign in here
+                </Link>
+              </p>
+            </div>
+          </>
+          ) : (
+          <>
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-serif font-bold text-gray-900 mb-2">Verify your email</h1>
+              <p className="text-gray-600">Enter the 6-digit code sent to {formData.email}</p>
+            </div>
+            <form onSubmit={handleVerify} className="space-y-6">
+              <input
+                type="text"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                className="input-field"
+                placeholder="6-digit code"
+                required
+              />
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full btn-primary py-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Verifying...' : 'Verify Email'}
+              </button>
+            </form>
+          </>
+          )}
         </motion.div>
       </motion.div>
     </div>

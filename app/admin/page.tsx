@@ -30,6 +30,8 @@ export default function AdminPanel() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const [goldPrice, setGoldPrice] = useState<string>('')
+  const [savingGold, setSavingGold] = useState(false)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -51,6 +53,44 @@ export default function AdminPanel() {
       toast.error('Failed to fetch products')
     } finally {
       setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetch('/api/gold-price').then(r => r.json()).then(d => {
+      if (d?.pricePerGram) setGoldPrice(String(d.pricePerGram))
+    }).catch(() => {})
+  }, [])
+
+  const saveGoldPrice = async () => {
+    if (!goldPrice) return
+    setSavingGold(true)
+    try {
+      const res = await fetch('/api/admin/gold-price', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pricePerGram: parseFloat(goldPrice) })
+      })
+      const data = await res.json()
+      if (data.success) {
+        if (data.repriced && data.updatedCount > 0) {
+          toast.success(`Gold price updated! Repriced ${data.updatedCount} product(s).`)
+          fetchProducts() // Refresh product list to show new prices
+        } else if (data.message) {
+          toast.success(data.message)
+        } else {
+          toast.success('Gold price updated')
+        }
+      } else {
+        toast.error(data.error || data.warning || 'Failed to update')
+        if (data.details) {
+          console.error('Gold price update details:', data.details)
+        }
+      }
+    } catch (error) {
+      toast.error('Failed to update gold price')
+    } finally {
+      setSavingGold(false)
     }
   }
 
@@ -146,6 +186,50 @@ export default function AdminPanel() {
             </div>
           </motion.div>
 
+          {/* Gold Price and Stats */}
+          <div className="grid gap-4 sm:gap-6 mb-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-gold-500 to-gold-600 shadow-xl border border-gold-400"
+            >
+              <div className="absolute inset-0 bg-black/5"></div>
+              <div className="relative p-6">
+                <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                      <span className="text-3xl">💎</span>
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-white mb-1">Today's Gold Price</h2>
+                      <p className="text-white/90 text-sm">Set price per gram (₹)</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <input
+                      value={goldPrice}
+                      onChange={(e) => setGoldPrice(e.target.value)}
+                      type="number"
+                      step="0.01"
+                      placeholder="e.g., 6500"
+                      className="w-40 px-4 py-3 rounded-xl border-2 border-white/30 bg-white/20 backdrop-blur-sm text-white placeholder:text-white/60 focus:ring-2 focus:ring-white/50 focus:border-white/50 font-semibold"
+                    />
+                    <motion.button
+                      onClick={saveGoldPrice}
+                      disabled={savingGold}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="bg-white text-gold-600 font-bold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {savingGold ? 'Saving...' : 'Save'}
+                    </motion.button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
           {/* Stats Cards */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -154,22 +238,28 @@ export default function AdminPanel() {
             className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8"
           >
             {[
-              { title: 'Total Products', value: products.length, icon: Package, color: 'blue' },
-              { title: 'In Stock', value: products.filter(p => p.inStock).length, icon: Eye, color: 'green' },
-              { title: 'Out of Stock', value: products.filter(p => !p.inStock).length, icon: Trash2, color: 'red' },
-              { title: 'Total Value', value: `₹${products.reduce((sum, p) => sum + p.price, 0).toLocaleString('en-IN')}`, icon: DollarSign, color: 'gold' }
+              { title: 'Total Products', value: products.length, icon: Package, color: 'blue', bgGradient: 'from-blue-400 to-blue-500' },
+              { title: 'In Stock', value: products.filter(p => p.inStock).length, icon: Eye, color: 'green', bgGradient: 'from-green-400 to-green-500' },
+              { title: 'Out of Stock', value: products.filter(p => !p.inStock).length, icon: Trash2, color: 'red', bgGradient: 'from-red-400 to-red-500' },
+              { title: 'Total Value', value: `₹${products.reduce((sum, p) => sum + p.price, 0).toLocaleString('en-IN')}`, icon: DollarSign, color: 'gold', bgGradient: 'from-gold-400 to-gold-500' }
             ].map((stat, index) => (
-              <div key={stat.title} className="bg-white rounded-xl shadow-lg p-6">
+              <motion.div
+                key={stat.title}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className="card-elevated p-6 hover:scale-105"
+              >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                    <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                    <p className="text-sm font-semibold text-gray-600 mb-1">{stat.title}</p>
+                    <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
                   </div>
-                  <div className={`p-3 rounded-full bg-${stat.color}-100`}>
-                    <stat.icon className={`w-6 h-6 text-${stat.color}-600`} />
+                  <div className={`p-4 rounded-2xl bg-gradient-to-br ${stat.bgGradient} shadow-lg`}>
+                    <stat.icon className="w-7 h-7 text-white" />
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </motion.div>
 
@@ -178,10 +268,11 @@ export default function AdminPanel() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="bg-white rounded-xl shadow-lg overflow-hidden"
+            className="card-elevated overflow-hidden"
           >
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">Products</h2>
+            <div className="px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
+              <h2 className="text-2xl font-bold text-gray-900">Products</h2>
+              <p className="text-sm text-gray-600 mt-1">Manage your product inventory</p>
             </div>
             
             {loading ? (

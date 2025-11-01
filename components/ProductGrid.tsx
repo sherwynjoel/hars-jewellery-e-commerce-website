@@ -11,6 +11,7 @@ interface Product {
   description: string
   price: number
   image: string
+  images?: { url: string }[]
   category: string
   inStock: boolean
 }

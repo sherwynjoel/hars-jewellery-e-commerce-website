@@ -9,38 +9,39 @@ export const authOptions: NextAuthOptions = {
       name: 'credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' }
+        password: { label: 'Password', type: 'password' },
+        otp: { label: 'OTP', type: 'text' },
+        mode: { label: 'Mode', type: 'text' } // 'password' | 'otp'
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          return null
+        if (!credentials?.email) return null
+
+        const user = await prisma.user.findUnique({ where: { email: credentials.email } })
+        if (!user) return null
+
+        // OTP mode login
+        if (credentials.mode === 'otp') {
+          if (!user.emailVerifiedAt) return null
+          if (!credentials.otp || !user.loginOtpHash || !user.loginOtpExpiresAt) return null
+          if (new Date(user.loginOtpExpiresAt).getTime() < Date.now()) return null
+
+          const ok = await bcrypt.compare(credentials.otp, user.loginOtpHash)
+          if (!ok) return null
+
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { loginOtpHash: null, loginOtpExpiresAt: null, otpAttemptCount: 0 }
+          })
+
+          return { id: user.id, email: user.email, name: user.name, role: user.role }
         }
 
-        const user = await prisma.user.findUnique({
-          where: {
-            email: credentials.email
-          }
-        })
+        // Default: password login
+        if (!credentials.password) return null
+        const isPasswordValid = await bcrypt.compare(credentials.password, user.password)
+        if (!isPasswordValid) return null
 
-        if (!user) {
-          return null
-        }
-
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password,
-          user.password
-        )
-
-        if (!isPasswordValid) {
-          return null
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-        }
+        return { id: user.id, email: user.email, name: user.name, role: user.role }
       }
     })
   ],

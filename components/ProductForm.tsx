@@ -11,9 +11,11 @@ interface Product {
   description: string
   price: number
   image: string
+  images?: { url: string }[]
   category: string
   inStock: boolean
   stockCount: number
+  goldWeightGrams?: number
 }
 
 interface ProductFormProps {
@@ -29,8 +31,11 @@ export default function ProductForm({ product, onClose, onSubmit }: ProductFormP
     price: '',
     category: '',
     stockCount: '',
-    image: ''
+    image: '',
+    images: [] as string[],
+    goldWeightGrams: ''
   })
+  const [todayGoldPrice, setTodayGoldPrice] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -41,10 +46,31 @@ export default function ProductForm({ product, onClose, onSubmit }: ProductFormP
         price: product.price.toString(),
         category: product.category,
         stockCount: product.stockCount.toString(),
-        image: product.image
+        image: product.image,
+        images: (product.images?.map(i => i.url) || (product.image ? [product.image] : [])) as string[],
+        goldWeightGrams: (product.goldWeightGrams ?? '').toString()
       })
     }
   }, [product])
+
+  useEffect(() => {
+    fetch('/api/gold-price')
+      .then(r => r.json())
+      .then(d => setTodayGoldPrice(d?.pricePerGram ?? null))
+      .catch(() => setTodayGoldPrice(null))
+  }, [])
+
+  useEffect(() => {
+    if (todayGoldPrice && formData.goldWeightGrams) {
+      const w = parseFloat(formData.goldWeightGrams)
+      if (!isNaN(w) && w > 0) {
+        const computed = Math.round(w * todayGoldPrice)
+        setFormData(prev => ({ ...prev, price: computed.toString() }))
+      }
+    } else if (formData.goldWeightGrams && !todayGoldPrice) {
+      toast.error('Today\'s gold price is not set. Please set it in admin panel first.')
+    }
+  }, [todayGoldPrice, formData.goldWeightGrams])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({
@@ -54,48 +80,33 @@ export default function ProductForm({ product, onClose, onSubmit }: ProductFormP
   }
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
+    const files = Array.from(e.target.files || [])
+    if (files.length) {
       // Show preview immediately
-      const previewUrl = URL.createObjectURL(file)
-      setFormData({
-        ...formData,
-        image: previewUrl
-      })
+      const previews = files.map(f => URL.createObjectURL(f))
+      setFormData(prev => ({ ...prev, images: [...prev.images, ...previews], image: prev.image || previews[0] }))
 
       // Upload file to server
       try {
-        const formData = new FormData()
-        formData.append('file', file)
-
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData
-        })
-
-        if (response.ok) {
+        const uploaded: string[] = []
+        for (const file of files) {
+          const fd = new FormData()
+          fd.append('file', file)
+          const response = await fetch('/api/upload', { method: 'POST', body: fd })
+          if (!response.ok) {
+            const error = await response.json().catch(() => ({}))
+            toast.error(error.error || 'Failed to upload image')
+            continue
+          }
           const result = await response.json()
-          // Update with permanent URL
-          setFormData(prev => ({
-            ...prev,
-            image: result.imageUrl
-          }))
-          toast.success('Image uploaded successfully!')
-        } else {
-          const error = await response.json()
-          toast.error(error.error || 'Failed to upload image')
-          // Reset to empty if upload failed
-          setFormData(prev => ({
-            ...prev,
-            image: ''
-          }))
+          uploaded.push(result.imageUrl)
+        }
+        if (uploaded.length) {
+          setFormData(prev => ({ ...prev, images: [...prev.images.filter(u => !u.startsWith('blob:')), ...uploaded], image: prev.image || uploaded[0] }))
+          toast.success('Images uploaded successfully!')
         }
       } catch (error) {
         toast.error('Failed to upload image')
-        setFormData(prev => ({
-          ...prev,
-          image: ''
-        }))
       }
     }
   }
@@ -108,6 +119,18 @@ export default function ProductForm({ product, onClose, onSubmit }: ProductFormP
       const url = product ? `/api/products/${product.id}` : '/api/products'
       const method = product ? 'PUT' : 'POST'
 
+      // Calculate price from gold weight if provided
+      let finalPrice = parseFloat(formData.price)
+      const weight = formData.goldWeightGrams ? parseFloat(formData.goldWeightGrams) : null
+      
+      if (weight && !isNaN(weight) && weight > 0 && todayGoldPrice) {
+        finalPrice = Math.round(weight * todayGoldPrice)
+      } else if (weight && !todayGoldPrice) {
+        toast.error('Today\'s gold price is not set. Please set it in admin panel first.')
+        setLoading(false)
+        return
+      }
+
       const response = await fetch(url, {
         method,
         headers: {
@@ -115,8 +138,10 @@ export default function ProductForm({ product, onClose, onSubmit }: ProductFormP
         },
         body: JSON.stringify({
           ...formData,
-          price: parseFloat(formData.price),
-          stockCount: parseInt(formData.stockCount)
+          price: finalPrice,
+          stockCount: parseInt(formData.stockCount),
+          images: formData.images,
+          goldWeightGrams: weight
         })
       })
 
@@ -124,8 +149,10 @@ export default function ProductForm({ product, onClose, onSubmit }: ProductFormP
         toast.success(product ? 'Product updated successfully!' : 'Product created successfully!')
         onSubmit()
       } else {
-        const error = await response.json()
-        toast.error(error.error || 'Something went wrong')
+        const error = await response.json().catch(() => ({ error: 'Unknown error' }))
+        const errorMsg = error.details || error.error || 'Something went wrong'
+        toast.error(errorMsg)
+        console.error('Product update/create error:', error)
       }
     } catch (error) {
       toast.error('Something went wrong')
@@ -219,8 +246,31 @@ export default function ProductForm({ product, onClose, onSubmit }: ProductFormP
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Gold weight (grams)</label>
+                <input
+                  type="number"
+                  name="goldWeightGrams"
+                  value={formData.goldWeightGrams}
+                  onChange={handleChange}
+                  className="input-field"
+                  placeholder="e.g., 5.25"
+                  step="0.01"
+                  min="0"
+                />
+                {todayGoldPrice != null && formData.goldWeightGrams && (
+                  <p className="text-xs text-gray-500 mt-1">Auto price = weight × today price (₹{todayGoldPrice.toLocaleString('en-IN')} per gram)</p>
+                )}
+                {!todayGoldPrice && (
+                  <p className="text-xs text-yellow-600 mt-1">Set today's gold price in admin panel first</p>
+                )}
+              </div>
+
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Price (₹)
+                  {formData.goldWeightGrams && todayGoldPrice && (
+                    <span className="text-xs text-gray-500 ml-2">(Auto-calculated)</span>
+                  )}
                 </label>
                 <input
                   type="number"
@@ -232,9 +282,13 @@ export default function ProductForm({ product, onClose, onSubmit }: ProductFormP
                   step="1"
                   min="0"
                   required
+                  readOnly={!!(formData.goldWeightGrams && todayGoldPrice)}
+                  style={{ cursor: formData.goldWeightGrams && todayGoldPrice ? 'not-allowed' : 'text', backgroundColor: formData.goldWeightGrams && todayGoldPrice ? '#f9fafb' : undefined }}
                 />
               </div>
+            </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Stock Count
@@ -253,35 +307,24 @@ export default function ProductForm({ product, onClose, onSubmit }: ProductFormP
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Product Image
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Product Images</label>
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                  id="image-upload"
-                />
-                <label
-                  htmlFor="image-upload"
-                  className="cursor-pointer flex flex-col items-center space-y-2"
-                >
+                <input type="file" accept="image/*" multiple onChange={handleImageUpload} className="hidden" id="image-upload" />
+                <label htmlFor="image-upload" className="cursor-pointer flex flex-col items-center space-y-2">
                   <Upload className="w-8 h-8 text-gray-400" />
-                  <span className="text-sm text-gray-600">
-                    Click to upload image or drag and drop
-                  </span>
+                  <span className="text-sm text-gray-600">Click to upload images or drag and drop</span>
                 </label>
               </div>
-
-              {formData.image && (
-                <div className="mt-4">
-                  <img
-                    src={formData.image}
-                    alt="Product preview"
-                    className="w-full h-48 object-cover rounded-lg"
-                  />
+              {formData.images.length > 0 && (
+                <div className="mt-4 grid grid-cols-3 gap-3">
+                  {formData.images.map((img, idx) => (
+                    <div key={idx} className="relative group">
+                      <img src={img} alt="Product" className="w-full h-24 object-cover rounded-lg" />
+                      <button type="button" onClick={() => setFormData(prev => ({ ...prev, images: prev.images.filter((_, i) => i !== idx), image: prev.images[0] || '' }))} className="absolute top-1 right-1 bg-white/80 rounded p-1 shadow hidden group-hover:block">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

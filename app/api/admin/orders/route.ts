@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -25,7 +27,12 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    return NextResponse.json(orders)
+    return new NextResponse(JSON.stringify(orders), {
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store'
+      }
+    })
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 })
   }

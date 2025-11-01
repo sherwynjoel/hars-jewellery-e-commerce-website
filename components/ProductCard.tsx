@@ -14,6 +14,7 @@ interface Product {
   description: string
   price: number
   image: string
+  images?: { url: string }[]
   category: string
   inStock: boolean
 }
@@ -54,21 +55,42 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
-      whileHover={{ y: -5 }}
-      className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden"
+      whileHover={{ y: -8 }}
+      className="group relative card overflow-hidden"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       <Link href={`/products/${product.id}`}>
-        <div className="relative aspect-square overflow-hidden">
-          <Image
-            src={product.image || '/placeholder-jewelry.jpg'}
-            alt={product.name}
-            fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-            className="object-cover transition-transform duration-300 group-hover:scale-110"
-            priority={index < 4} // Prioritize first 4 images
-          />
+        <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
+          {product.images && product.images.length > 1 ? (
+            <>
+              <Image
+                src={product.images[0]?.url || product.image || '/placeholder-jewelry.jpg'}
+                alt={product.name}
+                fill
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                className={`object-cover transition-opacity duration-300 ${isHovered ? 'opacity-0' : 'opacity-100'}`}
+                priority={index < 4}
+              />
+              <Image
+                src={product.images[1]?.url || product.image || '/placeholder-jewelry.jpg'}
+                alt={product.name}
+                fill
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                className={`object-cover transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+                priority={index < 4}
+              />
+            </>
+          ) : (
+            <Image
+              src={product.image || '/placeholder-jewelry.jpg'}
+              alt={product.name}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+              className="object-cover transition-transform duration-300 group-hover:scale-110"
+              priority={index < 4}
+            />
+          )}
           
           {/* Overlay */}
           <motion.div
@@ -100,13 +122,13 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
 
           {/* Stock Status */}
           {!product.inStock && (
-            <div className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+            <div className="absolute top-4 left-4 bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-lg backdrop-blur-sm">
               Out of Stock
             </div>
           )}
 
           {/* Category Badge */}
-          <div className="absolute top-4 right-4 bg-gold-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+          <div className="absolute top-4 right-4 bg-gradient-to-r from-gold-500 to-gold-600 text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-lg backdrop-blur-sm">
             {product.category}
           </div>
         </div>
@@ -132,10 +154,10 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
               whileTap={{ scale: 0.95 }}
               onClick={handleAddToCart}
               disabled={!product.inStock}
-              className={`flex items-center justify-center space-x-2 px-3 sm:px-4 py-2 rounded-lg font-medium transition-all duration-200 text-sm sm:text-base w-full sm:w-auto ${
+              className={`flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 rounded-xl font-semibold transition-all duration-300 text-sm sm:text-base w-full sm:w-auto shadow-md hover:shadow-lg ${
                 product.inStock
-                  ? 'bg-gold-500 hover:bg-gold-600 text-white'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  ? 'bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-600 hover:to-gold-700 text-white'
+                  : 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'
               }`}
             >
               <ShoppingCart className="w-4 h-4" />

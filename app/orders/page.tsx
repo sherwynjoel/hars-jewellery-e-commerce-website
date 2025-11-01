@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Package, Calendar, DollarSign, Eye, ArrowLeft } from 'lucide-react'
+import { Package, Calendar, DollarSign, Eye, ArrowLeft, FileText, Download } from 'lucide-react'
 import Link from 'next/link'
 import Navigation from '@/components/Navigation'
 import toast from 'react-hot-toast'
@@ -38,6 +38,7 @@ export default function OrdersPage() {
   const router = useRouter()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
+  const [openInvoiceId, setOpenInvoiceId] = useState<string | null>(null)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -192,6 +193,12 @@ export default function OrdersPage() {
                         <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.status)}`}>
                           {getStatusLabel(order.status)}
                         </span>
+                        <button
+                          onClick={() => setOpenInvoiceId(prev => (prev === order.id ? null : order.id))}
+                          className="inline-flex items-center gap-2 text-sm text-gold-700 hover:text-gold-800"
+                        >
+                          <FileText className="w-4 h-4" /> {openInvoiceId === order.id ? 'Hide invoice' : 'View invoice'}
+                        </button>
                       </div>
                     </div>
 
@@ -220,6 +227,75 @@ export default function OrdersPage() {
                           </div>
                         </div>
                       ))}
+
+                      
+
+                      {/* Invoice */}
+                      {openInvoiceId === order.id && (
+                        <div className="p-4 bg-white rounded-lg border border-gray-200">
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="text-sm font-semibold text-gray-800">Invoice</h4>
+                            <button
+                              onClick={() => {
+                                const printContents = document.getElementById(`invoice-${order.id}`)?.innerHTML || ''
+                                const win = window.open('', '', 'width=800,height=900')
+                                if (!win) return
+                                win.document.open()
+                                win.document.write(`<!DOCTYPE html><html><head><title>Invoice</title><style>
+                                  body{font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;padding:24px;color:#111827}
+                                  h2{font-size:20px;margin:0 0 8px}
+                                  .muted{color:#6B7280}
+                                  table{width:100%;border-collapse:collapse;margin-top:12px}
+                                  th,td{font-size:14px;text-align:left;padding:8px;border-bottom:1px solid #E5E7EB}
+                                  .right{text-align:right}
+                                </style></head><body>${printContents}</body></html>`)
+                                win.document.close()
+                                win.focus()
+                                win.print()
+                              }}
+                              className="inline-flex items-center gap-2 text-sm text-gold-700 hover:text-gold-800"
+                            >
+                              <Download className="w-4 h-4" /> Download PDF
+                            </button>
+                          </div>
+                          <div id={`invoice-${order.id}`}>
+                            <div className="mb-3">
+                              <h2 className="text-base font-semibold text-gray-900">Hars Jewellery</h2>
+                              <div className="text-xs text-gray-600">Invoice for Order #{order.id.slice(-8).toUpperCase()}</div>
+                              <div className="text-xs text-gray-600">Date: {new Date(order.createdAt).toLocaleString('en-IN')}</div>
+                            </div>
+                            <table>
+                              <thead>
+                                <tr>
+                                  <th>Item</th>
+                                  <th className="right">Qty</th>
+                                  <th className="right">Price</th>
+                                  <th className="right">Amount</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {order.items.map((item) => (
+                                  <tr key={`inv-${item.id}`}>
+                                    <td>{item.product.name}</td>
+                                    <td className="right">{item.quantity}</td>
+                                    <td className="right">₹{item.price.toLocaleString('en-IN')}</td>
+                                    <td className="right">₹{(item.price * item.quantity).toLocaleString('en-IN')}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                              <tfoot>
+                                <tr>
+                                  <td colSpan={3} className="right"><strong>Total</strong></td>
+                                  <td className="right"><strong>₹{order.total.toLocaleString('en-IN')}</strong></td>
+                                </tr>
+                                <tr>
+                                  <td colSpan={4} className="muted">Thank you for your purchase!</td>
+                                </tr>
+                              </tfoot>
+                            </table>
+                          </div>
+                        </div>
+                      )}
 
                         {/* Shipment Info */}
                         <div className="p-4 bg-white rounded-lg border border-gray-200">

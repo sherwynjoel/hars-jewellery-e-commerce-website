@@ -27,6 +27,7 @@
     "lucide-react": "^0.294.0",
     "next": "14.0.4",
     "next-auth": "^4.24.5",
+    "nodemailer": "^6.10.1",
     "postcss": "^8",
     "razorpay": "^2.9.6",
     "react": "^18",
@@ -42,7 +43,8 @@
     "eslint": "^8",
     "eslint-config-next": "14.0.4",
     "prisma": "^6.18.0",
-    "tsx": "^4.6.0"
+    "tsx": "^4.6.0",
+    "@types/nodemailer": "^6.4.15"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

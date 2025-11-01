@@ -6,8 +6,16 @@ import Link from 'next/link'
 import Navigation from '@/components/Navigation'
 import ProductGrid from '@/components/ProductGrid'
 import Footer from '@/components/Footer'
+import { useEffect, useState } from 'react'
 
 export default function HomePage() {
+  const [goldPrice, setGoldPrice] = useState<number | null>(null)
+  useEffect(() => {
+    fetch('/api/gold-price').then(async (r) => {
+      const d = await r.json()
+      setGoldPrice(d?.pricePerGram ?? null)
+    }).catch(() => {})
+  }, [])
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
       <Navigation />
@@ -15,6 +23,33 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className="pt-16 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
+          {goldPrice != null && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-8"
+            >
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-gold-500 to-gold-600 shadow-xl">
+                <div className="absolute inset-0 bg-black/10"></div>
+                <div className="relative px-6 py-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                      <span className="text-2xl">💎</span>
+                    </div>
+                    <div>
+                      <p className="text-white/90 text-sm font-medium">Today's Gold Price</p>
+                      <p className="text-white text-2xl font-bold">₹{goldPrice.toLocaleString('en-IN')} <span className="text-lg font-normal">per gram</span></p>
+                    </div>
+                  </div>
+                  <div className="hidden sm:block w-px h-12 bg-white/30"></div>
+                  <div className="hidden sm:block text-white/90 text-sm">
+                    <p className="font-semibold">Live Price</p>
+                    <p className="text-xs mt-1">Updated daily</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <motion.div
               initial={{ opacity: 0, x: -50 }}
@@ -68,19 +103,30 @@ export default function HomePage() {
               className="relative"
             >
               <div className="relative">
-                <div className="w-full h-96 bg-gradient-to-br from-gold-100 to-gold-200 rounded-3xl flex items-center justify-center">
-                  <Sparkles className="w-32 h-32 text-gold-500 animate-glow" />
+                <div className="relative w-full h-96 bg-gradient-to-br from-gold-50 via-gold-100 to-gold-50 rounded-3xl flex items-center justify-center overflow-hidden shadow-2xl border border-gold-200">
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(245,158,11,0.1),transparent)]"></div>
+                  <div className="relative z-10">
+                    <div className="w-32 h-32 bg-gradient-to-br from-gold-400 to-gold-600 rounded-full flex items-center justify-center shadow-xl animate-pulse-glow">
+                      <Sparkles className="w-16 h-16 text-white" />
+                    </div>
+                  </div>
+                  {/* Decorative elements */}
+                  <motion.div
+                    animate={{ y: [0, -15, 0], rotate: [0, 10, 0] }}
+                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                    className="absolute top-8 right-8 w-20 h-20 bg-gold-400/30 rounded-full blur-xl"
+                  />
+                  <motion.div
+                    animate={{ y: [0, 15, 0], rotate: [0, -10, 0] }}
+                    transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                    className="absolute bottom-8 left-8 w-16 h-16 bg-gold-300/40 rounded-full blur-xl"
+                  />
+                  <motion.div
+                    animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gold-200/20 rounded-full blur-3xl"
+                  />
                 </div>
-                <motion.div
-                  animate={{ y: [0, -10, 0] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                  className="absolute -top-4 -right-4 w-24 h-24 bg-gold-400 rounded-full opacity-20"
-                />
-                <motion.div
-                  animate={{ y: [0, 10, 0] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                  className="absolute -bottom-4 -left-4 w-16 h-16 bg-gold-300 rounded-full opacity-30"
-                />
               </div>
             </motion.div>
           </div>
@@ -129,15 +175,15 @@ export default function HomePage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: index * 0.2 }}
                 viewport={{ once: true }}
-                className="text-center p-8 rounded-2xl hover:shadow-lg transition-all duration-300"
+                className="card text-center p-8 hover:scale-105"
               >
-                <div className="w-16 h-16 bg-gold-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <feature.icon className="w-8 h-8 text-gold-600" />
+                <div className="w-20 h-20 bg-gradient-to-br from-gold-400 to-gold-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg transform hover:rotate-6 transition-transform duration-300">
+                  <feature.icon className="w-10 h-10 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                <h3 className="text-xl font-bold text-gray-900 mb-4">
                   {feature.title}
                 </h3>
-                <p className="text-gray-600">
+                <p className="text-gray-600 leading-relaxed">
                   {feature.description}
                 </p>
               </motion.div>
