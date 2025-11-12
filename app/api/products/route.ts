@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, description, price, image, images = [], category, stockCount, goldWeightGrams } = body
+    const { name, description, price, image, images = [], category, stockCount, goldWeightGrams, shippingCost } = body
 
     const normalizedImages: string[] = Array.isArray(images) ? images.filter(Boolean) : []
     const primaryImage = image || normalizedImages[0] || ''
@@ -66,6 +66,7 @@ export async function POST(request: NextRequest) {
         stockCount: parseInt(stockCount) || 0,
         inStock: parseInt(stockCount) > 0,
         goldWeightGrams: typeof goldWeightGrams === 'number' ? goldWeightGrams : goldWeightGrams ? parseFloat(goldWeightGrams) : null,
+        shippingCost: shippingCost ? parseFloat(shippingCost) : 0,
         images: {
           create: normalizedImages.map((url: string, index: number) => ({ url, position: index }))
         }

@@ -67,7 +67,7 @@ export default function ProductPage() {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navigation />
-        <div className="pt-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="pt-20 sm:pt-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="animate-pulse grid md:grid-cols-2 gap-10">
             <div className="aspect-square bg-gray-200 rounded-2xl" />
             <div className="space-y-4">
@@ -86,15 +86,15 @@ export default function ProductPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
-      <div className="pt-16">
+      <div className="pt-20 sm:pt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="mb-6">
-            <Link href="/collections" className="inline-flex items-center text-gray-600 hover:text-gold-600">
+            <Link href="/collections" className="inline-flex items-center text-gray-600 hover:text-black">
               <ArrowLeft className="w-5 h-5 mr-2" /> Back to collection
             </Link>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-10">
+          <div className="grid md:grid-cols-2 gap-6 md:gap-10">
             {/* Gallery */}
             <div>
               <div className="relative aspect-square bg-gradient-to-br from-gray-50 to-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
@@ -110,7 +110,7 @@ export default function ProductPage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent pointer-events-none"></div>
               </div>
               {images.length > 1 && (
-                <div className="mt-6 grid grid-cols-5 gap-3">
+                <div className="mt-4 sm:mt-6 grid grid-cols-4 sm:grid-cols-5 gap-2 sm:gap-3">
                   {images.map((url, idx) => (
                     <motion.button
                       key={`${url}-${idx}`}
@@ -119,8 +119,8 @@ export default function ProductPage() {
                       whileTap={{ scale: 0.95 }}
                       className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all duration-300 ${
                         idx === activeIndex 
-                          ? 'border-gold-500 shadow-lg ring-2 ring-gold-200' 
-                          : 'border-gray-200 hover:border-gold-300'
+                          ? 'border-black shadow-lg ring-2 ring-gray-200' 
+                          : 'border-gray-200 hover:border-gray-400'
                       }`}
                     >
                       <Image src={url} alt="thumb" fill className="object-cover" />
@@ -133,19 +133,21 @@ export default function ProductPage() {
             {/* Details */}
             <div className="space-y-6">
               <div>
-                <div className="inline-block bg-gold-100 text-gold-800 px-4 py-1.5 rounded-full text-sm font-bold mb-4">
+                <div className="inline-block bg-gray-100 text-gray-800 px-4 py-1.5 rounded-full text-sm font-bold mb-4">
                   {product.category}
                 </div>
-                <h1 className="text-4xl sm:text-5xl font-serif font-bold text-gray-900 mb-4 leading-tight">{product.name}</h1>
+                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serif font-bold text-dark-900 mb-4 leading-tight">
+                  {product.name}
+                </h1>
               </div>
               
               <div className="flex items-baseline gap-2 mb-6">
-                <span className="text-2xl text-gray-600">₹</span>
-                <span className="text-5xl font-bold text-gold-600">{product.price.toLocaleString('en-IN')}</span>
+                <span className="text-xl sm:text-2xl text-gray-600">₹</span>
+                <span className="text-3xl sm:text-4xl md:text-5xl font-bold text-black">{product.price.toLocaleString('en-IN')}</span>
               </div>
 
               <div className="card-elevated p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-3">Description</h3>
+                <h3 className="text-lg font-bold text-dark-900 mb-3">Description</h3>
                 <p className="text-gray-700 leading-relaxed text-lg">{product.description}</p>
               </div>
 
@@ -170,6 +172,23 @@ export default function ProductPage() {
           </div>
         </div>
       </div>
+      {/* Sticky mobile add-to-cart bar */}
+      {product.inStock && (
+        <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-xl border-t border-gray-200 p-4 shadow-lg mb-0">
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+            <div className="flex items-baseline gap-1">
+              <span className="text-gray-600">₹</span>
+              <span className="text-2xl font-bold text-purple-500">{product.price.toLocaleString('en-IN')}</span>
+            </div>
+            <button
+              onClick={handleAddToCart}
+              className="btn-primary flex-1 py-3"
+            >
+              Add to cart
+            </button>
+          </div>
+        </div>
+      )}
       <Footer />
     </div>
   )

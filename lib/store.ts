@@ -7,6 +7,7 @@ export interface CartItem {
   price: number
   image: string
   quantity: number
+  shippingCost?: number
 }
 
 interface CartStore {
@@ -18,8 +19,21 @@ interface CartStore {
   getTotalPrice: () => number
   getTotalItems: () => number
   getSubtotal: () => number
+  getShippingCost: () => number
   getTaxAmount: () => number
   getTotalWithTax: () => number
+}
+
+// Safe localStorage access for SSR
+const getStorage = () => {
+  if (typeof window !== 'undefined') {
+    return createJSONStorage(() => localStorage)
+  }
+  return createJSONStorage(() => ({
+    getItem: () => null,
+    setItem: () => {},
+    removeItem: () => {},
+  }))
 }
 
 export const useCartStore = create<CartStore>()(
@@ -65,6 +79,12 @@ export const useCartStore = create<CartStore>()(
       getSubtotal: () => {
         return get().items.reduce((total, item) => total + (item.price * item.quantity), 0)
       },
+      getShippingCost: () => {
+        return get().items.reduce((total, item) => {
+          const shipping = (item.shippingCost || 0) * item.quantity
+          return total + shipping
+        }, 0)
+      },
       getTaxAmount: () => {
         const subtotal = get().getSubtotal()
         return Math.round(subtotal * 0.03 * 100) / 100 // 3% tax, rounded to 2 decimal places
@@ -72,12 +92,13 @@ export const useCartStore = create<CartStore>()(
       getTotalWithTax: () => {
         const subtotal = get().getSubtotal()
         const tax = get().getTaxAmount()
-        return subtotal + tax
+        const shipping = get().getShippingCost()
+        return subtotal + tax + shipping
       }
     }),
     {
       name: 'cart-storage',
-      storage: createJSONStorage(() => localStorage),
+      storage: getStorage(),
     }
   )
 )

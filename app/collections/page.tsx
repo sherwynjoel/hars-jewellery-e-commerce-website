@@ -33,19 +33,19 @@ export default function CollectionsPage() {
     <div className="min-h-screen bg-gray-50">
       <Navigation />
       
-      <div className="pt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="pt-40 sm:pt-44 pb-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
           {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="mb-8"
+            className="mb-8 sm:mb-10 text-center sm:text-left"
           >
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-gray-900 mb-4">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-serif font-bold text-dark-900 mb-4 leading-tight pt-2">
               Our Collections
             </h1>
-            <p className="text-lg sm:text-xl text-gray-600 max-w-3xl">
+            <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl leading-relaxed pt-2">
               Discover our exquisite collection of handcrafted jewelry, each piece telling a unique story of elegance and timeless beauty.
             </p>
           </motion.div>
@@ -55,21 +55,21 @@ export default function CollectionsPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="card-elevated p-6 mb-8"
+            className="card-elevated p-6 mb-8 relative z-10"
           >
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
               {/* Category Filter */}
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 overflow-x-auto pb-2 -mx-2 px-2 sm:mx-0 sm:px-0 sm:pb-0">
                 {categories.map((category) => (
                   <motion.button
                     key={category.value}
                     onClick={() => setSelectedCategory(category.value)}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 border-2 ${
+                    className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 border-2 whitespace-nowrap ${
                       selectedCategory === category.value
-                        ? 'bg-gradient-to-r from-gold-500 to-gold-600 text-white border-gold-500 shadow-lg'
-                        : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-200 hover:border-gold-300'
+                        ? 'bg-gradient-to-r from-black to-gray-800 text-white border-black shadow-lg'
+                        : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-200 hover:border-gray-400'
                     }`}
                   >
                     {category.name}
@@ -87,7 +87,7 @@ export default function CollectionsPage() {
                     onClick={() => setShowFilters(prev => !prev)}
                     aria-expanded={showFilters}
                     aria-haspopup="listbox"
-                    className="inline-flex items-center gap-2 pl-4 pr-3 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-sm shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                    className="inline-flex items-center gap-2 pl-4 pr-3 py-2.5 rounded-xl border border-gray-200 bg-white text-dark-900 text-sm shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
                   >
                     {sortOptions.find(o => o.value === sortBy)?.name}
                     <motion.span animate={{ rotate: showFilters ? 180 : 0 }} className="text-gray-500">▾</motion.span>
@@ -106,7 +106,7 @@ export default function CollectionsPage() {
                           aria-selected={sortBy === option.value}
                           onClick={() => { setSortBy(option.value); setShowFilters(false) }}
                           className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
-                            sortBy === option.value ? 'bg-gold-50 text-gold-700' : 'hover:bg-gray-50'
+                            sortBy === option.value ? 'bg-gray-100 text-black' : 'hover:bg-gray-50'
                           }`}
                         >
                           {option.name}
@@ -123,7 +123,7 @@ export default function CollectionsPage() {
                     onClick={() => setViewMode('grid')}
                     className={`inline-flex items-center justify-center h-9 w-9 rounded-lg transition-all ${
                       viewMode === 'grid'
-                        ? 'bg-gold-500 text-white shadow'
+                        ? 'bg-black text-white shadow'
                         : 'text-gray-600 hover:bg-gray-50'
                     }`}
                   >
@@ -134,7 +134,7 @@ export default function CollectionsPage() {
                     onClick={() => setViewMode('list')}
                     className={`inline-flex items-center justify-center h-9 w-9 rounded-lg transition-all ${
                       viewMode === 'list'
-                        ? 'bg-gold-500 text-white shadow'
+                        ? 'bg-black text-white shadow'
                         : 'text-gray-600 hover:bg-gray-50'
                     }`}
                   >

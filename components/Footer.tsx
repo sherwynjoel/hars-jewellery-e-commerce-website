@@ -71,7 +71,7 @@ export default function Footer() {
                 <input
                   type="email"
                   placeholder="Enter your email"
-                  className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent text-white placeholder-gray-400"
+                  className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent text-white placeholder-gray-400"
                 />
                 <button className="btn-primary whitespace-nowrap">
                   Subscribe
@@ -98,7 +98,7 @@ export default function Footer() {
                 <a
                   key={social.name}
                   href={social.href}
-                  className="text-gray-400 hover:text-gold-400 transition-colors duration-200"
+                  className="text-gray-400 hover:text-white transition-colors duration-200"
                   aria-label={social.name}
                 >
                   <social.icon className="w-5 h-5" />
@@ -110,7 +110,7 @@ export default function Footer() {
           {/* Powered by section */}
           <div className="mt-4 pt-4 border-t border-gray-800">
             <p className="text-gray-500 text-sm text-center">
-              Powered by <a href="https://thearktech.in" target="_blank" rel="noopener noreferrer" className="text-gold-400 hover:text-gold-300 transition-colors duration-200">thearktech.in</a>
+              Powered by <a href="https://thearktech.in" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors duration-200">thearktech.in</a>
             </p>
           </div>
         </motion.div>

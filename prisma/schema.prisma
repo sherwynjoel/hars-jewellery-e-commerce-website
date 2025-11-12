@@ -15,6 +15,7 @@ model User {
   email     String   @unique
   name      String?
   password  String
+  mobile    String?  @unique
   role      Role     @default(USER)
   // Email verification and OTP auth
   emailVerifiedAt     DateTime?
@@ -40,6 +41,7 @@ model Product {
   inStock     Boolean  @default(true)
   stockCount  Int      @default(0)
   goldWeightGrams Float?
+  shippingCost Float?  @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   cartItems   CartItem[]
@@ -121,6 +123,30 @@ model GoldPrice {
   id        String   @id @default(cuid())
   date      DateTime @unique
   pricePerGram Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SlideshowImage {
+  id        String   @id @default(cuid())
+  url       String
+  title     String?
+  subtitle  String?
+  position  Int      @default(0)
+  isActive  Boolean  @default(true)
+  type      String   @default("image") // "image" or "video"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VideoCarouselItem {
+  id        String   @id @default(cuid())
+  url       String
+  title     String?
+  subtitle  String?
+  position  Int      @default(0)
+  isActive  Boolean  @default(true)
+  type      String   @default("video") // "image" or "video"
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

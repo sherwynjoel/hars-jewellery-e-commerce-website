@@ -9,6 +9,8 @@ import { Plus, Edit, Trash2, Eye, Crown, Package, Users, DollarSign } from 'luci
 import Navigation from '@/components/Navigation'
 import ProductForm from '@/components/ProductForm'
 import DeployButton from '@/components/DeployButton'
+import SlideshowManager from '@/components/SlideshowManager'
+import VideoCarouselManager from '@/components/VideoCarouselManager'
 import toast from 'react-hot-toast'
 
 interface Product {
@@ -32,6 +34,7 @@ export default function AdminPanel() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [goldPrice, setGoldPrice] = useState<string>('')
   const [savingGold, setSavingGold] = useState(false)
+  const [totalUsers, setTotalUsers] = useState<number>(0)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -60,6 +63,16 @@ export default function AdminPanel() {
     fetch('/api/gold-price').then(r => r.json()).then(d => {
       if (d?.pricePerGram) setGoldPrice(String(d.pricePerGram))
     }).catch(() => {})
+    
+    // Fetch total users count
+    fetch('/api/admin/users')
+      .then(r => r.json())
+      .then(users => {
+        if (Array.isArray(users)) {
+          setTotalUsers(users.length)
+        }
+      })
+      .catch(() => {})
   }, [])
 
   const saveGoldPrice = async () => {
@@ -131,7 +144,7 @@ export default function AdminPanel() {
   if (status === 'loading') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gold-500"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-black"></div>
       </div>
     )
   }
@@ -144,7 +157,7 @@ export default function AdminPanel() {
     <div className="min-h-screen bg-gray-50">
       <Navigation />
       
-      <div className="pt-16">
+      <div className="pt-20 sm:pt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}
           <motion.div
@@ -155,7 +168,7 @@ export default function AdminPanel() {
           >
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               <div>
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-gray-900 mb-2">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-dark-900 mb-2">
                   Admin Panel
                 </h1>
                 <p className="text-gray-600 text-sm sm:text-base">
@@ -180,87 +193,198 @@ export default function AdminPanel() {
                 >
                   Manage Orders
                 </Link>
+                
+                <Link
+                  href="/admin/users"
+                  className="btn-secondary inline-flex items-center justify-center gap-2 text-sm sm:text-base px-4 sm:px-6 py-2 sm:py-3"
+                >
+                  <Users className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span className="hidden sm:inline">View Users</span>
+                  <span className="sm:hidden">Users</span>
+                </Link>
 
                 <DeployButton />
               </div>
             </div>
           </motion.div>
 
-          {/* Gold Price and Stats */}
-          <div className="grid gap-4 sm:gap-6 mb-8">
+          {/* Gold Price */}
+          <div className="mb-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-gold-500 to-gold-600 shadow-xl border border-gold-400"
+              className="bg-gray-800 rounded-lg p-5 shadow-md"
             >
-              <div className="absolute inset-0 bg-black/5"></div>
-              <div className="relative p-6">
-                <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                      <span className="text-3xl">💎</span>
-                    </div>
-                    <div>
-                      <h2 className="text-xl font-bold text-white mb-1">Today's Gold Price</h2>
-                      <p className="text-white/90 text-sm">Set price per gram (₹)</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <input
-                      value={goldPrice}
-                      onChange={(e) => setGoldPrice(e.target.value)}
-                      type="number"
-                      step="0.01"
-                      placeholder="e.g., 6500"
-                      className="w-40 px-4 py-3 rounded-xl border-2 border-white/30 bg-white/20 backdrop-blur-sm text-white placeholder:text-white/60 focus:ring-2 focus:ring-white/50 focus:border-white/50 font-semibold"
-                    />
-                    <motion.button
-                      onClick={saveGoldPrice}
-                      disabled={savingGold}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="bg-white text-gold-600 font-bold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {savingGold ? 'Saving...' : 'Save'}
-                    </motion.button>
-                  </div>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-1">Gold Price per Gram</h3>
+                  <p className="text-gray-300 text-sm">Update current gold rate</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <input
+                    value={goldPrice}
+                    onChange={(e) => setGoldPrice(e.target.value)}
+                    type="number"
+                    step="0.01"
+                    placeholder="Enter price"
+                    className="w-32 sm:w-40 px-3 py-2 rounded-lg border border-gray-600 bg-gray-700 text-white placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-500"
+                  />
+                  <button
+                    onClick={saveGoldPrice}
+                    disabled={savingGold}
+                    className="bg-white text-gray-900 font-medium px-5 py-2 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {savingGold ? 'Saving...' : 'Save'}
+                  </button>
                 </div>
               </div>
             </motion.div>
           </div>
 
           {/* Stats Cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+            <div className="bg-white rounded-lg p-5 border border-gray-200 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Total Products</p>
+                  <p className="text-2xl font-bold text-gray-900">{products.length}</p>
+                </div>
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <Package className="w-5 h-5 text-blue-600" />
+                </div>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg p-5 border border-gray-200 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">In Stock</p>
+                  <p className="text-2xl font-bold text-gray-900">{products.filter(p => p.inStock).length}</p>
+                </div>
+                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                  <Eye className="w-5 h-5 text-green-600" />
+                </div>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg p-5 border border-gray-200 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Out of Stock</p>
+                  <p className="text-2xl font-bold text-gray-900">{products.filter(p => !p.inStock).length}</p>
+                </div>
+                <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                  <Trash2 className="w-5 h-5 text-red-600" />
+                </div>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg p-5 border border-gray-200 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Total Value</p>
+                  <p className="text-2xl font-bold text-gray-900">₹{products.reduce((sum, p) => sum + p.price, 0).toLocaleString('en-IN')}</p>
+                </div>
+                <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <DollarSign className="w-5 h-5 text-gray-600" />
+                </div>
+              </div>
+            </div>
+            <Link
+              href="/admin/users"
+              className="bg-white rounded-lg p-5 border border-gray-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer group"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Total Users</p>
+                  <p className="text-2xl font-bold text-gray-900 group-hover:text-purple-600 transition-colors">
+                    {totalUsers}
+                  </p>
+                  <p className="text-xs text-purple-600 mt-1 font-medium">View All →</p>
+                </div>
+                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+                  <Users className="w-5 h-5 text-purple-600" />
+                </div>
+              </div>
+            </Link>
+          </div>
+
+          {/* Quick Actions */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8"
+            transition={{ duration: 0.8, delay: 0.25 }}
+            className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-6 mb-6 border border-purple-100"
           >
-            {[
-              { title: 'Total Products', value: products.length, icon: Package, color: 'blue', bgGradient: 'from-blue-400 to-blue-500' },
-              { title: 'In Stock', value: products.filter(p => p.inStock).length, icon: Eye, color: 'green', bgGradient: 'from-green-400 to-green-500' },
-              { title: 'Out of Stock', value: products.filter(p => !p.inStock).length, icon: Trash2, color: 'red', bgGradient: 'from-red-400 to-red-500' },
-              { title: 'Total Value', value: `₹${products.reduce((sum, p) => sum + p.price, 0).toLocaleString('en-IN')}`, icon: DollarSign, color: 'gold', bgGradient: 'from-gold-400 to-gold-500' }
-            ].map((stat, index) => (
-              <motion.div
-                key={stat.title}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="card-elevated p-6 hover:scale-105"
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <Link
+                href="/admin/users"
+                className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm hover:shadow-md transition-all hover:border-purple-300 group"
               >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-gray-600 mb-1">{stat.title}</p>
-                    <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+                    <Users className="w-6 h-6 text-purple-600" />
                   </div>
-                  <div className={`p-4 rounded-2xl bg-gradient-to-br ${stat.bgGradient} shadow-lg`}>
-                    <stat.icon className="w-7 h-7 text-white" />
+                  <div>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-purple-600 transition-colors">
+                      View Users
+                    </h4>
+                    <p className="text-sm text-gray-500">Manage user accounts</p>
                   </div>
                 </div>
-              </motion.div>
-            ))}
+              </Link>
+              <Link
+                href="/admin/orders"
+                className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm hover:shadow-md transition-all hover:border-blue-300 group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                    <Package className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                      Manage Orders
+                    </h4>
+                    <p className="text-sm text-gray-500">View and update orders</p>
+                  </div>
+                </div>
+              </Link>
+              <button
+                onClick={() => setShowForm(true)}
+                className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm hover:shadow-md transition-all hover:border-green-300 group text-left"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors">
+                    <Plus className="w-6 h-6 text-green-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-green-600 transition-colors">
+                      Add Product
+                    </h4>
+                    <p className="text-sm text-gray-500">Create new product</p>
+                  </div>
+                </div>
+              </button>
+            </div>
+          </motion.div>
+
+          {/* Slideshow Management */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="card-elevated p-6 mb-8"
+          >
+            <SlideshowManager />
+          </motion.div>
+
+          {/* Video Carousel Management */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.35 }}
+            className="card-elevated p-6 mb-8"
+          >
+            <VideoCarouselManager />
           </motion.div>
 
           {/* Products Table */}
@@ -271,100 +395,169 @@ export default function AdminPanel() {
             className="card-elevated overflow-hidden"
           >
             <div className="px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
-              <h2 className="text-2xl font-bold text-gray-900">Products</h2>
+              <h2 className="text-2xl font-bold text-dark-900">Products</h2>
               <p className="text-sm text-gray-600 mt-1">Manage your product inventory</p>
             </div>
             
             {loading ? (
               <div className="p-8 text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gold-500 mx-auto"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto"></div>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Product
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Category
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Price
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Stock
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {products.map((product) => (
-                      <tr key={product.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="flex-shrink-0 h-12 w-12">
-                              <img
-                                className="h-12 w-12 rounded-lg object-cover"
-                                src={product.image || '/placeholder-jewelry.jpg'}
-                                alt={product.name}
-                              />
+              <>
+                {/* Mobile Card View */}
+                <div className="md:hidden space-y-4">
+                  {products.map((product) => (
+                    <motion.div
+                      key={product.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-white rounded-2xl shadow-lg p-4 border border-gray-100"
+                    >
+                      <div className="flex items-start gap-4">
+                        <img
+                          className="h-20 w-20 rounded-xl object-cover flex-shrink-0"
+                          src={product.image || '/placeholder-jewelry.jpg'}
+                          alt={product.name}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-base font-bold text-dark-900 mb-1 truncate">
+                            {product.name}
+                          </h3>
+                          <p className="text-xs text-gray-500 mb-2 line-clamp-2">
+                            {product.description}
+                          </p>
+                          <div className="flex flex-wrap gap-2 items-center mb-2">
+                            <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded-full font-semibold">
+                              {product.category}
+                            </span>
+                            <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
+                              product.inStock 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              {product.inStock ? 'In Stock' : 'Out of Stock'}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-lg font-bold text-dark-900">
+                                ₹{product.price.toLocaleString('en-IN')}
+                              </p>
+                              <p className="text-xs text-gray-500">Stock: {product.stockCount}</p>
                             </div>
-                            <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900">
-                                {product.name}
-                              </div>
-                              <div className="text-sm text-gray-500 truncate max-w-xs">
-                                {product.description}
-                              </div>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleEdit(product)}
+                                className="p-2 text-black hover:bg-gray-50 rounded-lg transition-colors"
+                                aria-label="Edit product"
+                              >
+                                <Edit className="w-5 h-5" />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(product.id)}
+                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                aria-label="Delete product"
+                              >
+                                <Trash2 className="w-5 h-5" />
+                              </button>
                             </div>
                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {product.category}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          ₹{product.price.toLocaleString('en-IN')}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {product.stockCount}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            product.inStock 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-red-100 text-red-800'
-                          }`}>
-                            {product.inStock ? 'In Stock' : 'Out of Stock'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => handleEdit(product)}
-                              className="text-gold-600 hover:text-gold-900"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(product.id)}
-                              className="text-red-600 hover:text-red-900"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+
+                {/* Desktop Table View */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Product
+                        </th>
+                        <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Category
+                        </th>
+                        <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Price
+                        </th>
+                        <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Stock
+                        </th>
+                        <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Actions
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {products.map((product) => (
+                        <tr key={product.id} className="hover:bg-gray-50">
+                          <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="flex-shrink-0 h-12 w-12">
+                                <img
+                                  className="h-12 w-12 rounded-lg object-cover"
+                                  src={product.image || '/placeholder-jewelry.jpg'}
+                                  alt={product.name}
+                                />
+                              </div>
+                              <div className="ml-4">
+                                <div className="text-sm font-medium text-dark-900">
+                                  {product.name}
+                                </div>
+                                <div className="text-sm text-gray-500 truncate max-w-xs">
+                                  {product.description}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-dark-900">
+                            {product.category}
+                          </td>
+                          <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm font-medium text-dark-900">
+                            ₹{product.price.toLocaleString('en-IN')}
+                          </td>
+                          <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-dark-900">
+                            {product.stockCount}
+                          </td>
+                          <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              product.inStock 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              {product.inStock ? 'In Stock' : 'Out of Stock'}
+                            </span>
+                          </td>
+                          <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => handleEdit(product)}
+                                className="p-2 text-black hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                                aria-label="Edit product"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(product.id)}
+                                className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                                aria-label="Delete product"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </motion.div>
         </div>

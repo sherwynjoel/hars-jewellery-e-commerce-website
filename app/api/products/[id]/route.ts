@@ -28,7 +28,7 @@ export async function PUT(
 ) {
   try {
     const body = await request.json()
-    const { name, description, price, image, images = [], category, stockCount, goldWeightGrams } = body
+    const { name, description, price, image, images = [], category, stockCount, goldWeightGrams, shippingCost } = body
 
     // Validate required fields
     if (!name || !description || price === undefined || !category) {
@@ -67,7 +67,8 @@ export async function PUT(
       category,
       stockCount: parsedStockCount,
       inStock: parsedStockCount > 0,
-      goldWeightGrams: parsedGoldWeight
+      goldWeightGrams: parsedGoldWeight,
+      shippingCost: shippingCost ? parseFloat(shippingCost) : 0
     }
 
     // Handle images update - always delete old images first

@@ -79,7 +79,7 @@ export default function AdminOrdersPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
-      <div className="pt-16">
+      <div className="pt-20 sm:pt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-serif font-bold">Orders Management</h1>
@@ -117,7 +117,7 @@ export default function AdminOrdersPage() {
                       <div className="text-sm text-gray-700 mt-1">Customer: {order.user?.name || order.user?.email}</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-lg font-bold text-gold-600">₹{order.total.toLocaleString('en-IN')}</div>
+                      <div className="text-lg font-bold text-black">₹{order.total.toLocaleString('en-IN')}</div>
                       <div className="text-xs text-gray-600">{order.status}</div>
                     </div>
                   </div>

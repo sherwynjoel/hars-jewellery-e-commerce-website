@@ -44,8 +44,17 @@ export default function RazorpayPaymentGateway({ onSuccess, onError, customer }:
         
         const script = document.createElement('script')
         script.src = 'https://checkout.razorpay.com/v1/checkout.js'
-        script.onload = () => resolve(true)
-        script.onerror = () => resolve(false)
+        script.async = true
+        script.crossOrigin = 'anonymous'
+        script.onload = () => {
+          console.log('Razorpay script loaded successfully')
+          resolve(true)
+        }
+        script.onerror = (error) => {
+          console.error('Failed to load Razorpay script:', error)
+          toast.error('Failed to load payment gateway. Please check your internet connection.')
+          resolve(false)
+        }
         document.body.appendChild(script)
       })
     }
@@ -60,6 +69,19 @@ export default function RazorpayPaymentGateway({ onSuccess, onError, customer }:
     }
 
     setLoading(true)
+
+    // Wait for Razorpay script to load
+    let retries = 0
+    while (!window.Razorpay && retries < 10) {
+      await new Promise(resolve => setTimeout(resolve, 200))
+      retries++
+    }
+
+    if (!window.Razorpay) {
+      toast.error('Payment gateway is loading. Please wait a moment and try again.')
+      setLoading(false)
+      return
+    }
 
     try {
       // Try to create Razorpay order first
@@ -119,7 +141,13 @@ export default function RazorpayPaymentGateway({ onSuccess, onError, customer }:
 
       const { orderId, amount, currency, key } = await response.json()
 
-      // Razorpay options
+      // Check if Razorpay is loaded
+      if (!window.Razorpay) {
+        toast.error('Payment gateway not loaded. Please refresh the page and try again.')
+        throw new Error('Razorpay script not loaded')
+      }
+
+      // Razorpay options with mobile support
       const options = {
         key: key,
         amount: amount,
@@ -169,6 +197,11 @@ export default function RazorpayPaymentGateway({ onSuccess, onError, customer }:
           email: customer?.email || 'harsjewelleryst@gmail.com',
           contact: customer?.phone || '+919659393459'
         },
+        readonly: {
+          name: false,
+          email: false,
+          contact: false
+        },
         notes: {
           address: [
             customer?.addressLine1,
@@ -177,19 +210,38 @@ export default function RazorpayPaymentGateway({ onSuccess, onError, customer }:
           ].filter(Boolean).join(', ')
         },
         theme: {
-          color: '#f59e0b'
+          color: '#7B68EE'
         },
         modal: {
           ondismiss: function() {
             toast.error('Payment cancelled')
             onError()
-          }
-        }
+          },
+          escape: true,
+          animation: true
+        },
+        retry: {
+          enabled: true,
+          max_count: 3
+        },
+        timeout: 300,
+        remember_customer: true
       }
 
       // Open Razorpay checkout
-      const razorpay = new window.Razorpay(options)
-      razorpay.open()
+      try {
+        const razorpay = new window.Razorpay(options)
+        razorpay.on('payment.failed', function (response: any) {
+          console.error('Payment failed:', response.error)
+          toast.error(`Payment failed: ${response.error.description || 'Unknown error'}`)
+          onError()
+        })
+        razorpay.open()
+      } catch (error: any) {
+        console.error('Error opening Razorpay:', error)
+        toast.error(`Failed to open payment gateway: ${error.message || 'Unknown error'}`)
+        onError()
+      }
 
     } catch (error: any) {
       console.error('Payment error:', error)
@@ -206,7 +258,7 @@ export default function RazorpayPaymentGateway({ onSuccess, onError, customer }:
       whileTap={{ scale: 0.98 }}
       onClick={handlePayment}
       disabled={loading || items.length === 0 || !customer || !customer.name || !customer.email || !customer.phone || !customer.addressLine1 || !customer.city || !customer.state || !customer.postalCode}
-      className="w-full bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-600 hover:to-gold-700 text-white font-semibold py-4 px-6 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center space-x-2"
+      className="w-full bg-gradient-to-r from-black to-gray-800 hover:from-gray-800 hover:to-gray-900 text-white font-semibold py-4 px-6 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center space-x-2"
     >
       {loading ? (
         <>

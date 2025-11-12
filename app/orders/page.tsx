@@ -74,7 +74,7 @@ export default function OrdersPage() {
       case 'PROCESSING':
         return 'bg-blue-100 text-blue-800'
       case 'SHIPPED':
-        return 'bg-purple-100 text-purple-800'
+        return 'bg-gray-100 text-gray-800'
       case 'DELIVERED':
         return 'bg-green-100 text-green-800'
       case 'CANCELLED':
@@ -96,7 +96,7 @@ export default function OrdersPage() {
   if (status === 'loading') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gold-500"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-black"></div>
       </div>
     )
   }
@@ -109,7 +109,7 @@ export default function OrdersPage() {
     <div className="min-h-screen bg-gray-50">
       <Navigation />
       
-      <div className="pt-16">
+      <div className="pt-20 sm:pt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}
           <motion.div
@@ -121,12 +121,12 @@ export default function OrdersPage() {
             <div className="flex items-center gap-4 mb-6">
               <Link
                 href="/"
-                className="p-2 text-gray-600 hover:text-gold-600 transition-colors"
+                className="p-2 text-gray-600 hover:text-black transition-colors"
               >
                 <ArrowLeft className="w-5 h-5" />
               </Link>
               <div>
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-gray-900">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-dark-900">
                   Your Orders
                 </h1>
                 <p className="text-gray-600 text-sm sm:text-base">
@@ -139,7 +139,7 @@ export default function OrdersPage() {
           {/* Orders List */}
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gold-500"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
             </div>
           ) : orders.length === 0 ? (
             <motion.div
@@ -149,7 +149,7 @@ export default function OrdersPage() {
               className="text-center py-12"
             >
               <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No orders yet</h3>
+              <h3 className="text-lg font-semibold text-dark-900 mb-2">No orders yet</h3>
               <p className="text-gray-600 mb-6">Start shopping to see your orders here</p>
               <Link
                 href="/collections"
@@ -171,7 +171,7 @@ export default function OrdersPage() {
                   <div className="p-6">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900">
+                        <h3 className="text-lg font-semibold text-dark-900">
                           Order #{order.id.slice(-8).toUpperCase()}
                         </h3>
                         <div className="flex items-center text-sm text-gray-600 mt-1">
@@ -186,7 +186,7 @@ export default function OrdersPage() {
                         </div>
                       </div>
                       <div className="flex flex-col sm:items-end gap-2">
-                        <div className="flex items-center text-lg font-bold text-gold-600">
+                        <div className="flex items-center text-lg font-bold text-black">
                           <span className="text-lg mr-1">₹</span>
                           {order.total.toLocaleString('en-IN')}
                         </div>
@@ -195,7 +195,7 @@ export default function OrdersPage() {
                         </span>
                         <button
                           onClick={() => setOpenInvoiceId(prev => (prev === order.id ? null : order.id))}
-                          className="inline-flex items-center gap-2 text-sm text-gold-700 hover:text-gold-800"
+                          className="inline-flex items-center gap-2 text-sm text-black hover:text-gray-700"
                         >
                           <FileText className="w-4 h-4" /> {openInvoiceId === order.id ? 'Hide invoice' : 'View invoice'}
                         </button>
@@ -204,7 +204,7 @@ export default function OrdersPage() {
 
                     {/* Order Items */}
                     <div className="space-y-4">
-                      <h4 className="font-medium text-gray-900">Items:</h4>
+                      <h4 className="font-medium text-dark-900">Items:</h4>
                       {order.items.map((item) => (
                         <div key={item.id} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
                           <div className="flex-shrink-0">
@@ -215,14 +215,14 @@ export default function OrdersPage() {
                             />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h5 className="text-sm font-medium text-gray-900 truncate">
+                            <h5 className="text-sm font-medium text-dark-900 truncate">
                               {item.product.name}
                             </h5>
                             <p className="text-sm text-gray-600">
                               Quantity: {item.quantity}
                             </p>
                           </div>
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium text-dark-900">
                             ₹{(item.price * item.quantity).toLocaleString('en-IN')}
                           </div>
                         </div>
@@ -253,14 +253,14 @@ export default function OrdersPage() {
                                 win.focus()
                                 win.print()
                               }}
-                              className="inline-flex items-center gap-2 text-sm text-gold-700 hover:text-gold-800"
+                              className="inline-flex items-center gap-2 text-sm text-black hover:text-gray-700"
                             >
                               <Download className="w-4 h-4" /> Download PDF
                             </button>
                           </div>
                           <div id={`invoice-${order.id}`}>
                             <div className="mb-3">
-                              <h2 className="text-base font-semibold text-gray-900">Hars Jewellery</h2>
+                              <h2 className="text-base font-semibold text-dark-900">Hars Jewellery</h2>
                               <div className="text-xs text-gray-600">Invoice for Order #{order.id.slice(-8).toUpperCase()}</div>
                               <div className="text-xs text-gray-600">Date: {new Date(order.createdAt).toLocaleString('en-IN')}</div>
                             </div>
@@ -318,7 +318,7 @@ export default function OrdersPage() {
                               </div>
                               {order.trackingUrl && (
                                 <div>
-                                  <a href={order.trackingUrl} target="_blank" rel="noreferrer" className="text-gold-600 hover:text-gold-700">Track shipment</a>
+                                  <a href={order.trackingUrl} target="_blank" rel="noreferrer" className="text-black hover:text-gray-700">Track shipment</a>
                                 </div>
                               )}
                             </div>

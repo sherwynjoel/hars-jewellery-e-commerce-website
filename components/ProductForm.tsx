@@ -16,6 +16,7 @@ interface Product {
   inStock: boolean
   stockCount: number
   goldWeightGrams?: number
+  shippingCost?: number
 }
 
 interface ProductFormProps {
@@ -33,23 +34,34 @@ export default function ProductForm({ product, onClose, onSubmit }: ProductFormP
     stockCount: '',
     image: '',
     images: [] as string[],
-    goldWeightGrams: ''
+    goldWeightGrams: '',
+    makingCostAndWastage: '',
+    shippingCost: ''
   })
   const [todayGoldPrice, setTodayGoldPrice] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
 
+  // Track the original/base price when editing (before making cost is added)
+  const [basePrice, setBasePrice] = useState<number | null>(null)
+
   useEffect(() => {
     if (product) {
+      const productPrice = product.price
+      setBasePrice(productPrice)
       setFormData({
         name: product.name,
         description: product.description,
-        price: product.price.toString(),
+        price: productPrice.toString(),
         category: product.category,
         stockCount: product.stockCount.toString(),
         image: product.image,
         images: (product.images?.map(i => i.url) || (product.image ? [product.image] : [])) as string[],
-        goldWeightGrams: (product.goldWeightGrams ?? '').toString()
+        goldWeightGrams: (product.goldWeightGrams ?? '').toString(),
+        makingCostAndWastage: '',
+        shippingCost: (product.shippingCost ?? '').toString()
       })
+    } else {
+      setBasePrice(null)
     }
   }, [product])
 
@@ -64,18 +76,40 @@ export default function ProductForm({ product, onClose, onSubmit }: ProductFormP
     if (todayGoldPrice && formData.goldWeightGrams) {
       const w = parseFloat(formData.goldWeightGrams)
       if (!isNaN(w) && w > 0) {
-        const computed = Math.round(w * todayGoldPrice)
-        setFormData(prev => ({ ...prev, price: computed.toString() }))
+        const basePrice = Math.round(w * todayGoldPrice)
+        const makingCost = parseFloat(formData.makingCostAndWastage) || 0
+        const finalPrice = basePrice + makingCost
+        setFormData(prev => ({ ...prev, price: finalPrice.toString() }))
       }
     } else if (formData.goldWeightGrams && !todayGoldPrice) {
       toast.error('Today\'s gold price is not set. Please set it in admin panel first.')
     }
-  }, [todayGoldPrice, formData.goldWeightGrams])
+  }, [todayGoldPrice, formData.goldWeightGrams, formData.makingCostAndWastage])
+
+  // Update price when making cost changes (for manual price entry, when not using gold weight)
+  useEffect(() => {
+    if (product && basePrice !== null && !formData.goldWeightGrams) {
+      const makingCost = parseFloat(formData.makingCostAndWastage) || 0
+      const finalPrice = basePrice + makingCost
+      setFormData(prev => ({ ...prev, price: finalPrice.toString() }))
+    }
+  }, [formData.makingCostAndWastage, basePrice, product, formData.goldWeightGrams])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
+    
+    // If price is manually changed (not using gold weight), recalculate base price
+    // by subtracting the current making cost
+    if (name === 'price' && !formData.goldWeightGrams && product && basePrice !== null) {
+      const newPrice = parseFloat(value) || 0
+      const currentMakingCost = parseFloat(formData.makingCostAndWastage) || 0
+      const newBasePrice = newPrice - currentMakingCost
+      setBasePrice(newBasePrice >= 0 ? newBasePrice : 0)
+    }
+    
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: value
     })
   }
 
@@ -119,17 +153,33 @@ export default function ProductForm({ product, onClose, onSubmit }: ProductFormP
       const url = product ? `/api/products/${product.id}` : '/api/products'
       const method = product ? 'PUT' : 'POST'
 
-      // Calculate price from gold weight if provided
-      let finalPrice = parseFloat(formData.price)
+      // Calculate price from gold weight if provided, then add making cost and wastage
+      let calculatedBasePrice = 0
       const weight = formData.goldWeightGrams ? parseFloat(formData.goldWeightGrams) : null
+      const makingCost = parseFloat(formData.makingCostAndWastage) || 0
       
       if (weight && !isNaN(weight) && weight > 0 && todayGoldPrice) {
-        finalPrice = Math.round(weight * todayGoldPrice)
+        // If gold weight is provided, calculate base price from weight
+        calculatedBasePrice = Math.round(weight * todayGoldPrice)
       } else if (weight && !todayGoldPrice) {
         toast.error('Today\'s gold price is not set. Please set it in admin panel first.')
         setLoading(false)
         return
+      } else if (!weight) {
+        // For manual price entry, use the base price we've been tracking
+        // If we're editing and have a base price, use it; otherwise use the price field value
+        if (product && basePrice !== null) {
+          calculatedBasePrice = basePrice
+        } else {
+          // For new products or when basePrice is not set, use the price field value
+          // and subtract making cost if it exists (to get the base)
+          const priceFieldValue = parseFloat(formData.price) || 0
+          calculatedBasePrice = priceFieldValue - makingCost
+        }
       }
+
+      // Add making cost and wastage to the base price
+      const finalPrice = Math.round(calculatedBasePrice + makingCost)
 
       const response = await fetch(url, {
         method,
@@ -141,7 +191,8 @@ export default function ProductForm({ product, onClose, onSubmit }: ProductFormP
           price: finalPrice,
           stockCount: parseInt(formData.stockCount),
           images: formData.images,
-          goldWeightGrams: weight
+          goldWeightGrams: weight,
+          shippingCost: parseFloat(formData.shippingCost) || 0
         })
       })
 
@@ -258,7 +309,7 @@ export default function ProductForm({ product, onClose, onSubmit }: ProductFormP
                   min="0"
                 />
                 {todayGoldPrice != null && formData.goldWeightGrams && (
-                  <p className="text-xs text-gray-500 mt-1">Auto price = weight × today price (₹{todayGoldPrice.toLocaleString('en-IN')} per gram)</p>
+                  <p className="text-xs text-gray-500 mt-1">Base price = weight × today price (₹{todayGoldPrice.toLocaleString('en-IN')} per gram)</p>
                 )}
                 {!todayGoldPrice && (
                   <p className="text-xs text-yellow-600 mt-1">Set today's gold price in admin panel first</p>
@@ -285,7 +336,52 @@ export default function ProductForm({ product, onClose, onSubmit }: ProductFormP
                   readOnly={!!(formData.goldWeightGrams && todayGoldPrice)}
                   style={{ cursor: formData.goldWeightGrams && todayGoldPrice ? 'not-allowed' : 'text', backgroundColor: formData.goldWeightGrams && todayGoldPrice ? '#f9fafb' : undefined }}
                 />
+                {product && formData.makingCostAndWastage && parseFloat(formData.makingCostAndWastage) > 0 && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    {basePrice !== null ? (
+                      <>Base: ₹{basePrice.toLocaleString('en-IN')} + Making Cost: ₹{parseFloat(formData.makingCostAndWastage).toLocaleString('en-IN')} = ₹{parseFloat(formData.price).toLocaleString('en-IN')}</>
+                    ) : (
+                      <>Final Price includes making cost of ₹{parseFloat(formData.makingCostAndWastage).toLocaleString('en-IN')}</>
+                    )}
+                  </p>
+                )}
               </div>
+            </div>
+
+            {product && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Making Cost & Wastage (₹)
+                </label>
+                <input
+                  type="number"
+                  name="makingCostAndWastage"
+                  value={formData.makingCostAndWastage}
+                  onChange={handleChange}
+                  className="input-field w-full"
+                  placeholder="Enter making cost and wastage (e.g., 200)"
+                  step="0.01"
+                  min="0"
+                />
+                <p className="text-xs text-gray-500 mt-1">This amount will be added to the product price</p>
+              </div>
+            )}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Shipping Cost (₹)
+              </label>
+              <input
+                type="number"
+                name="shippingCost"
+                value={formData.shippingCost}
+                onChange={handleChange}
+                className="input-field w-full"
+                placeholder="Enter shipping cost (e.g., 50)"
+                step="0.01"
+                min="0"
+              />
+              <p className="text-xs text-gray-500 mt-1">This amount will be added separately during billing (not included in product price)</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

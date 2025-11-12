@@ -12,14 +12,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 })
     }
 
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      return NextResponse.json({ error: 'Only image files are allowed' }, { status: 400 })
+    // Validate file type (images or videos)
+    const isImage = file.type.startsWith('image/')
+    const isVideo = file.type.startsWith('video/')
+    
+    if (!isImage && !isVideo) {
+      return NextResponse.json({ error: 'Only image and video files are allowed' }, { status: 400 })
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      return NextResponse.json({ error: 'File size must be less than 5MB' }, { status: 400 })
+    // Validate file size (max 50MB for videos, 20MB for images to preserve quality)
+    const maxSize = isVideo ? 50 * 1024 * 1024 : 20 * 1024 * 1024
+    if (file.size > maxSize) {
+      return NextResponse.json({ 
+        error: `File size must be less than ${isVideo ? '50MB' : '20MB'}` 
+      }, { status: 400 })
     }
 
     const bytes = await file.arrayBuffer()
@@ -40,11 +46,14 @@ export async function POST(request: NextRequest) {
     await writeFile(filepath, buffer)
 
     // Return the public URL
-    const imageUrl = `/uploads/${filename}`
+    const fileUrl = `/uploads/${filename}`
 
     return NextResponse.json({ 
       success: true, 
-      imageUrl,
+      imageUrl: fileUrl, // Keep for backward compatibility
+      videoUrl: isVideo ? fileUrl : undefined,
+      fileUrl,
+      fileType: isVideo ? 'video' : 'image',
       filename 
     })
   } catch (error) {

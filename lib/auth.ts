@@ -9,60 +9,60 @@ export const authOptions: NextAuthOptions = {
       name: 'credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' },
-        otp: { label: 'OTP', type: 'text' },
-        mode: { label: 'Mode', type: 'text' } // 'password' | 'otp'
+        password: { label: 'Password', type: 'password' }
       },
       async authorize(credentials) {
-        if (!credentials?.email) return null
-
-        const user = await prisma.user.findUnique({ where: { email: credentials.email } })
-        if (!user) return null
-
-        // OTP mode login
-        if (credentials.mode === 'otp') {
-          if (!user.emailVerifiedAt) return null
-          if (!credentials.otp || !user.loginOtpHash || !user.loginOtpExpiresAt) return null
-          if (new Date(user.loginOtpExpiresAt).getTime() < Date.now()) return null
-
-          const ok = await bcrypt.compare(credentials.otp, user.loginOtpHash)
-          if (!ok) return null
-
-          await prisma.user.update({
-            where: { id: user.id },
-            data: { loginOtpHash: null, loginOtpExpiresAt: null, otpAttemptCount: 0 }
-          })
-
-          return { id: user.id, email: user.email, name: user.name, role: user.role }
+        if (!credentials?.email || !credentials?.password) {
+          return null
         }
 
-        // Default: password login
-        if (!credentials.password) return null
-        const isPasswordValid = await bcrypt.compare(credentials.password, user.password)
-        if (!isPasswordValid) return null
+        // Normalize email (lowercase and trim)
+        const normalizedEmail = credentials.email.trim().toLowerCase()
 
-        return { id: user.id, email: user.email, name: user.name, role: user.role }
+        const user = await prisma.user.findUnique({
+          where: { email: normalizedEmail }
+        })
+
+        if (!user || !user.password) {
+          return null
+        }
+
+        // Check if email is verified
+        if (!user.emailVerifiedAt) {
+          throw new Error('Please verify your email before signing in. Check your inbox for the verification link.')
+        }
+
+        const valid = await bcrypt.compare(credentials.password, user.password)
+        if (!valid) {
+          return null
+        }
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role
+        }
       }
     })
   ],
   session: {
     strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 30 * 24 * 60 * 60
   },
   jwt: {
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 30 * 24 * 60 * 60
   },
-  secret: process.env.NEXTAUTH_SECRET || 'hars-jewellery-secret-key-2024-production-ready',
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.role = user.role
         token.id = user.id
+        token.role = user.role
       }
       return token
     },
     async session({ session, token }) {
-      if (token) {
+      if (session.user) {
         session.user.id = token.id as string
         session.user.role = token.role as string
       }
@@ -70,6 +70,8 @@ export const authOptions: NextAuthOptions = {
     }
   },
   pages: {
-    signIn: '/auth/signin',
-  }
+    signIn: '/auth/signin'
+  },
+  secret: process.env.NEXTAUTH_SECRET || 'hars-jewellery-secret-key'
 }
+

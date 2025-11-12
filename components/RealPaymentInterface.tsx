@@ -93,12 +93,12 @@ export default function RealPaymentInterface({ onSuccess, onError }: RealPayment
       animate={{ opacity: 1, y: 0 }}
       className="space-y-4"
     >
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Choose Payment Method</h3>
+      <h3 className="text-lg font-semibold text-dark-900 mb-4">Choose Payment Method</h3>
       
       <div className="grid gap-3">
         <button
           onClick={() => handlePaymentMethod('card')}
-          className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-gold-500 hover:bg-gold-50 transition-all"
+          className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all"
         >
           <div className="flex items-center space-x-3">
             <CreditCard className="w-6 h-6 text-blue-600" />
@@ -109,10 +109,10 @@ export default function RealPaymentInterface({ onSuccess, onError }: RealPayment
 
         <button
           onClick={() => handlePaymentMethod('upi')}
-          className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-gold-500 hover:bg-gold-50 transition-all"
+          className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all"
         >
           <div className="flex items-center space-x-3">
-            <Smartphone className="w-6 h-6 text-purple-600" />
+            <Smartphone className="w-6 h-6 text-purple-500" />
             <span className="font-medium">UPI Payment</span>
           </div>
           <span className="text-sm text-gray-500">PhonePe, GPay, Paytm</span>
@@ -120,7 +120,7 @@ export default function RealPaymentInterface({ onSuccess, onError }: RealPayment
 
         <button
           onClick={() => handlePaymentMethod('wallet')}
-          className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-gold-500 hover:bg-gold-50 transition-all"
+          className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all"
         >
           <div className="flex items-center space-x-3">
             <Smartphone className="w-6 h-6 text-green-600" />
@@ -154,14 +154,14 @@ export default function RealPaymentInterface({ onSuccess, onError }: RealPayment
         <QrCode className="w-32 h-32 mx-auto text-gray-400 mb-4" />
         <div className="space-y-2">
           <p className="text-sm text-gray-600">Scan QR Code with your UPI app</p>
-          <p className="text-lg font-semibold text-gold-600">₹{getTotalWithTax().toLocaleString('en-IN')}</p>
+          <p className="text-lg font-semibold text-purple-500">₹{getTotalWithTax().toLocaleString('en-IN')}</p>
         </div>
       </div>
 
       <div className="space-y-3">
         <button
           onClick={() => setPaymentStep('processing')}
-          className="w-full bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-600 hover:to-gold-700 text-white font-semibold py-3 px-6 rounded-lg transition-all"
+          className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-all"
         >
           I have completed the payment
         </button>
@@ -179,9 +179,9 @@ export default function RealPaymentInterface({ onSuccess, onError }: RealPayment
       animate={{ opacity: 1, y: 0 }}
       className="text-center space-y-6"
     >
-      <Loader2 className="w-16 h-16 text-gold-600 animate-spin mx-auto" />
+      <Loader2 className="w-16 h-16 text-purple-500 animate-spin mx-auto" />
       <div>
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">Processing Payment</h3>
+        <h3 className="text-xl font-semibold text-dark-900 mb-2">Processing Payment</h3>
         <p className="text-gray-600">Please wait while we verify your payment...</p>
       </div>
       

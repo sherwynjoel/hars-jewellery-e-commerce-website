@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import ProductCard from './ProductCard'
-import { prisma } from '@/lib/prisma'
 
 interface Product {
   id: string
