@@ -110,8 +110,7 @@ export async function GET(request: NextRequest) {
               userId: true
             }
           }
-        },
-        orderBy: { createdAt: 'desc' }
+        }
       })
       tables.push({
         tableName: 'OrderItem',
@@ -122,8 +121,7 @@ export async function GET(request: NextRequest) {
           productId: item.productId,
           productName: item.product.name,
           quantity: item.quantity,
-          price: item.price,
-          createdAt: item.createdAt
+          price: item.price
         }))
       })
     } catch (error) {
