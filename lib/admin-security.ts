@@ -60,7 +60,7 @@ function checkRateLimit(identifier: string): { allowed: boolean; remaining: numb
     
     // Clean up old entries periodically
     if (rateLimitStore.size > 1000) {
-      for (const [key, value] of rateLimitStore.entries()) {
+      for (const [key, value] of Array.from(rateLimitStore.entries())) {
         if (now > value.resetTime) {
           rateLimitStore.delete(key)
         }
