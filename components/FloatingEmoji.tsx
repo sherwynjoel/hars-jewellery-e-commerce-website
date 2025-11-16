@@ -37,7 +37,7 @@ export default function FloatingEmoji() {
 
         {/* Emoji bubble */}
         <motion.div
-          className="glass-effect shadow-premium rounded-full w-16 h-16 flex items-center justify-center border-2 border-purple-300/50 select-none bg-gradient-to-br from-white/95 to-purple-50/80 backdrop-blur-xl"
+          className="glass-effect shadow-premium rounded-full w-16 h-16 flex items-center justify-center border-2 border-purple-300/50 select-none bg-gradient-to-br from-white/95 to-purple-50/80 backdrop-blur-xl pointer-events-auto"
           title="Hello! 👋"
           animate={reduceMotion ? {} : {
             y: [0, -15, 0],
@@ -53,7 +53,6 @@ export default function FloatingEmoji() {
             scale: 1.15,
             rotate: 10
           }}
-          className="pointer-events-auto"
         >
           <span className="text-3xl" role="img" aria-label="cool-emoji">😎</span>
         </motion.div>
