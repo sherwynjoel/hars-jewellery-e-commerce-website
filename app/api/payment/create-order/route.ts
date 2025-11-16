@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       receipt: receipt || `receipt_${Date.now()}`,
       notes: {
         userId: session.user.id,
-        userEmail: session.user.email,
+        userEmail: session.user.email || null,
         businessEmail: 'harsjewelleryst@gmail.com',
         businessPhone: '+919659393459',
       }
