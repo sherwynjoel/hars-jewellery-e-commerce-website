@@ -114,14 +114,8 @@ function VerifyAdminAccessContent() {
       }
     } catch (err: any) {
       console.error('Verification request error:', err)
-      // Only set error if we don't already have a verification link
-      if (!verificationLink) {
-        setError(err.message || 'Failed to send verification email')
-        toast.error(err.message || 'Failed to send verification email')
-      } else {
-        // If we have a link, just show a warning
-        toast.error('Email sending failed, but verification link is available below')
-      }
+      setError(err.message || 'Failed to send verification email')
+      toast.error(err.message || 'Failed to send verification email')
     } finally {
       setVerifying(false)
     }
