@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { verifyAdminAccess } from '@/lib/admin-security'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    // Enhanced admin security check
+    const securityCheck = await verifyAdminAccess(request, 'VIEW_ORDERS', 'Order', null)
+    
+    if (!securityCheck.authorized) {
+      return securityCheck.response!
     }
 
     const { searchParams } = new URL(request.url)

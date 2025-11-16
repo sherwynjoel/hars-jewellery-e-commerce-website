@@ -25,10 +25,25 @@ model User {
   loginOtpExpiresAt   DateTime?
   otpAttemptCount     Int       @default(0)
   lastOtpSentAt       DateTime?
+  // Admin security fields
+  adminLoginAttempts     Int       @default(0)
+  adminLoginLockedUntil  DateTime?
+  lastAdminLoginAt       DateTime?
+  lastAdminLoginIp       String?
+  adminTwoFactorEnabled  Boolean   @default(false)
+  adminTwoFactorSecret   String?
+  // Admin panel access verification
+  adminPanelVerifiedAt   DateTime?
+  adminPanelVerifyToken  String?
+  adminPanelVerifyExpiresAt DateTime?
+  // Password reset
+  resetPasswordToken     String?
+  resetPasswordExpiresAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   cart      CartItem[]
   orders    Order[]
+  adminActivities AdminActivity[]
 }
 
 model Product {
@@ -75,8 +90,13 @@ model Order {
   addressLine1 String   @default("")
   addressLine2 String?
   city         String   @default("")
-  state        String   @default("")
+  state         String   @default("")
   postalCode   String   @default("")
+  // Address verification
+  addressVerified     Boolean   @default(false)
+  addressVerifiedAt   DateTime?
+  addressVerifiedBy   String?   // Admin user ID who verified
+  addressVerificationMethod String? // e.g., "OTP", "MANUAL", "ADMIN"
   // Shipment tracking
   trackingNumber String?
   trackingCarrier String?
@@ -149,4 +169,29 @@ model VideoCarouselItem {
   type      String   @default("video") // "image" or "video"
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model AdminActivity {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    String   // e.g., "LOGIN", "CREATE_PRODUCT", "DELETE_USER", etc.
+  resource  String?  // e.g., "Product", "User", "Order"
+  resourceId String? // ID of the resource affected
+  ipAddress String?
+  userAgent String?
+  details   String?  // JSON string with additional details
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model ServiceStatus {
+  id            String   @id @default("service-status")
+  isStopped     Boolean  @default(false)
+  stoppedAt     DateTime?
+  message       String?  @default("Our services are stopped today. Please check after 12 hours.")
+  updatedAt     DateTime @updatedAt
+  updatedBy     String?  // Admin user ID who updated it
 }

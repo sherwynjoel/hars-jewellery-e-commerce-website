@@ -10,6 +10,7 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
+    "setup:admin": "tsx scripts/setup-admin-email.ts",
     "deploy": "npm run db:generate && npm run build && pm2 restart hars-jewellery",
     "production": "NODE_ENV=production npm run build && npm start"
   },

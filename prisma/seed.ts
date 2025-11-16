@@ -4,22 +4,39 @@ import bcrypt from 'bcryptjs'
 const prisma = new PrismaClient()
 
 async function main() {
-  // Create admin user
-  const adminPassword = await bcrypt.hash('admin123', 12)
-  const admin = await prisma.user.upsert({
-    where: { email: 'admin@harsjewellery.com' },
-    update: {
-      emailVerifiedAt: new Date(), // Ensure admin email is verified
-      role: 'ADMIN' // Ensure role is ADMIN
-    },
-    create: {
-      email: 'admin@harsjewellery.com',
-      name: 'Admin User',
-      password: adminPassword,
-      role: 'ADMIN',
-      emailVerifiedAt: new Date() // Admin email is pre-verified
-    }
+  // IMPORTANT: Always ensure admin user is FIRST in database
+  const adminEmail = 'harsjewellery2005@gmail.com'
+  const existingAdmin = await prisma.user.findUnique({
+    where: { email: adminEmail }
   })
+  
+  let admin
+  if (existingAdmin) {
+    // Update existing admin to ensure it's first (set early createdAt date)
+    admin = await prisma.user.update({
+      where: { email: adminEmail },
+      data: {
+        role: 'ADMIN',
+        emailVerifiedAt: existingAdmin.emailVerifiedAt || new Date(),
+        createdAt: new Date('2024-01-01T00:00:00Z') // Set very early date to ensure first position
+      }
+    })
+    console.log('✅ Admin user updated to be first user:', admin.email)
+  } else {
+    // Create admin user FIRST - ensure it's always the first user
+    const adminPassword = await bcrypt.hash('admin123', 12)
+    admin = await prisma.user.create({
+      data: {
+        email: adminEmail,
+        name: 'Admin User',
+        password: adminPassword,
+        role: 'ADMIN',
+        emailVerifiedAt: new Date(), // Admin email is pre-verified
+        createdAt: new Date('2024-01-01T00:00:00Z') // Set very early date to ensure first position
+      }
+    })
+    console.log('✅ Admin user created as first user:', admin.email)
+  }
 
   // Create sample user
   const userPassword = await bcrypt.hash('user123', 12)
@@ -37,7 +54,7 @@ async function main() {
     }
   })
 
-  // Create sample products with Indian Rupees pricing
+  // Create sample products with Indian Rupees pricing (only if they don't exist)
   const products = [
     {
       name: 'Classic Gold Ring',
@@ -95,10 +112,12 @@ async function main() {
     }
   ]
 
+  // Create all products (allows multiple products with same name)
   for (const product of products) {
     await prisma.product.create({
       data: product
     })
+    console.log(`✅ Created product: ${product.name}`)
   }
 
   console.log('Database seeded successfully!')

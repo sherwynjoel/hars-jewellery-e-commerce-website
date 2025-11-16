@@ -43,6 +43,8 @@ export default function ProductForm({ product, onClose, onSubmit }: ProductFormP
 
   // Track the original/base price when editing (before making cost is added)
   const [basePrice, setBasePrice] = useState<number | null>(null)
+  // Track base price for new products (when price is manually entered)
+  const [newProductBasePrice, setNewProductBasePrice] = useState<number | null>(null)
 
   useEffect(() => {
     if (product) {
@@ -62,6 +64,7 @@ export default function ProductForm({ product, onClose, onSubmit }: ProductFormP
       })
     } else {
       setBasePrice(null)
+      setNewProductBasePrice(null)
     }
   }, [product])
 
@@ -88,23 +91,51 @@ export default function ProductForm({ product, onClose, onSubmit }: ProductFormP
 
   // Update price when making cost changes (for manual price entry, when not using gold weight)
   useEffect(() => {
-    if (product && basePrice !== null && !formData.goldWeightGrams) {
-      const makingCost = parseFloat(formData.makingCostAndWastage) || 0
-      const finalPrice = basePrice + makingCost
-      setFormData(prev => ({ ...prev, price: finalPrice.toString() }))
+    if (!formData.goldWeightGrams) {
+      if (product && basePrice !== null) {
+        // For editing: use tracked base price
+        const makingCost = parseFloat(formData.makingCostAndWastage) || 0
+        const finalPrice = basePrice + makingCost
+        setFormData(prev => ({ ...prev, price: finalPrice.toString() }))
+      } else if (!product) {
+        // For new products: track base price when price is manually entered
+        const currentPrice = parseFloat(formData.price) || 0
+        const makingCost = parseFloat(formData.makingCostAndWastage) || 0
+        
+        // If price was just entered and base price not set, treat entered price as base
+        if (currentPrice > 0 && newProductBasePrice === null) {
+          setNewProductBasePrice(currentPrice - makingCost)
+        }
+        
+        // Calculate final price: base + making cost
+        const base = newProductBasePrice !== null ? newProductBasePrice : (currentPrice - makingCost)
+        const finalPrice = Math.max(0, base) + makingCost
+        
+        if (finalPrice !== currentPrice && currentPrice > 0) {
+          setFormData(prev => ({ ...prev, price: finalPrice.toString() }))
+        }
+      }
     }
-  }, [formData.makingCostAndWastage, basePrice, product, formData.goldWeightGrams])
+  }, [formData.makingCostAndWastage, basePrice, product, formData.goldWeightGrams, newProductBasePrice])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     
     // If price is manually changed (not using gold weight), recalculate base price
     // by subtracting the current making cost
-    if (name === 'price' && !formData.goldWeightGrams && product && basePrice !== null) {
+    if (name === 'price' && !formData.goldWeightGrams) {
       const newPrice = parseFloat(value) || 0
       const currentMakingCost = parseFloat(formData.makingCostAndWastage) || 0
-      const newBasePrice = newPrice - currentMakingCost
-      setBasePrice(newBasePrice >= 0 ? newBasePrice : 0)
+      
+      if (product && basePrice !== null) {
+        // For editing: update base price
+        const newBasePrice = newPrice - currentMakingCost
+        setBasePrice(newBasePrice >= 0 ? newBasePrice : 0)
+      } else if (!product) {
+        // For new products: update tracked base price
+        const newBasePrice = newPrice - currentMakingCost
+        setNewProductBasePrice(newBasePrice >= 0 ? newBasePrice : 0)
+      }
     }
     
     setFormData({
@@ -336,36 +367,36 @@ export default function ProductForm({ product, onClose, onSubmit }: ProductFormP
                   readOnly={!!(formData.goldWeightGrams && todayGoldPrice)}
                   style={{ cursor: formData.goldWeightGrams && todayGoldPrice ? 'not-allowed' : 'text', backgroundColor: formData.goldWeightGrams && todayGoldPrice ? '#f9fafb' : undefined }}
                 />
-                {product && formData.makingCostAndWastage && parseFloat(formData.makingCostAndWastage) > 0 && (
+                {formData.makingCostAndWastage && parseFloat(formData.makingCostAndWastage) > 0 && (
                   <p className="text-xs text-gray-500 mt-1">
                     {basePrice !== null ? (
                       <>Base: ₹{basePrice.toLocaleString('en-IN')} + Making Cost: ₹{parseFloat(formData.makingCostAndWastage).toLocaleString('en-IN')} = ₹{parseFloat(formData.price).toLocaleString('en-IN')}</>
+                    ) : formData.price ? (
+                      <>Price: ₹{parseFloat(formData.price).toLocaleString('en-IN')} (includes making cost of ₹{parseFloat(formData.makingCostAndWastage).toLocaleString('en-IN')})</>
                     ) : (
-                      <>Final Price includes making cost of ₹{parseFloat(formData.makingCostAndWastage).toLocaleString('en-IN')}</>
+                      <>Final Price will include making cost of ₹{parseFloat(formData.makingCostAndWastage).toLocaleString('en-IN')}</>
                     )}
                   </p>
                 )}
               </div>
             </div>
 
-            {product && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Making Cost & Wastage (₹)
-                </label>
-                <input
-                  type="number"
-                  name="makingCostAndWastage"
-                  value={formData.makingCostAndWastage}
-                  onChange={handleChange}
-                  className="input-field w-full"
-                  placeholder="Enter making cost and wastage (e.g., 200)"
-                  step="0.01"
-                  min="0"
-                />
-                <p className="text-xs text-gray-500 mt-1">This amount will be added to the product price</p>
-              </div>
-            )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Making Cost & Wastage (₹)
+              </label>
+              <input
+                type="number"
+                name="makingCostAndWastage"
+                value={formData.makingCostAndWastage}
+                onChange={handleChange}
+                className="input-field w-full"
+                placeholder="Enter making cost and wastage (e.g., 200)"
+                step="0.01"
+                min="0"
+              />
+              <p className="text-xs text-gray-500 mt-1">This amount will be added to the product price</p>
+            </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">

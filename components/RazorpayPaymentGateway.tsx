@@ -30,8 +30,23 @@ declare global {
 
 export default function RazorpayPaymentGateway({ onSuccess, onError, customer }: RazorpayPaymentGatewayProps) {
   const [loading, setLoading] = useState(false)
+  const [serviceStopped, setServiceStopped] = useState(false)
+  const [serviceMessage, setServiceMessage] = useState('')
   const { items, getTotalWithTax, clearCart } = useCartStore()
   const router = useRouter()
+
+  // Check service status on mount
+  useEffect(() => {
+    fetch('/api/admin/service-status')
+      .then(r => r.json())
+      .then(data => {
+        if (data.isStopped) {
+          setServiceStopped(true)
+          setServiceMessage(data.message || 'Our services are stopped today. Please check after 12 hours.')
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   // Load Razorpay script
   useEffect(() => {
@@ -65,6 +80,12 @@ export default function RazorpayPaymentGateway({ onSuccess, onError, customer }:
   const handlePayment = async () => {
     if (items.length === 0) {
       toast.error('Your cart is empty')
+      return
+    }
+
+    // Check service status before payment
+    if (serviceStopped) {
+      toast.error(serviceMessage || 'Our services are stopped today. Please check after 12 hours.')
       return
     }
 
@@ -257,13 +278,18 @@ export default function RazorpayPaymentGateway({ onSuccess, onError, customer }:
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       onClick={handlePayment}
-      disabled={loading || items.length === 0 || !customer || !customer.name || !customer.email || !customer.phone || !customer.addressLine1 || !customer.city || !customer.state || !customer.postalCode}
+      disabled={loading || items.length === 0 || serviceStopped || !customer || !customer.name || !customer.email || !customer.phone || !customer.addressLine1 || !customer.city || !customer.state || !customer.postalCode}
       className="w-full bg-gradient-to-r from-black to-gray-800 hover:from-gray-800 hover:to-gray-900 text-white font-semibold py-4 px-6 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center space-x-2"
     >
       {loading ? (
         <>
           <Loader2 className="w-5 h-5 animate-spin" />
           <span>Processing...</span>
+        </>
+      ) : serviceStopped ? (
+        <>
+          <span>⚠️</span>
+          <span>Services Stopped</span>
         </>
       ) : (
         <>

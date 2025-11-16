@@ -1,36 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { verifyAdminAccess } from '@/lib/admin-security'
 
 export const dynamic = 'force-dynamic'
 
 // Get all users (Admin only)
 export async function GET(request: NextRequest) {
   try {
-    console.log('🔐 Admin Users API: Checking authentication...')
+    // Enhanced admin security check
+    const securityCheck = await verifyAdminAccess(request, 'VIEW_USERS', 'User', null)
     
-    // Check authentication and admin role
-    const session = await getServerSession(authOptions)
-    console.log('🔐 Admin Users API: Session check:', { 
-      hasSession: !!session, 
-      userId: session?.user?.id,
-      role: session?.user?.role 
-    })
-    
-    if (!session) {
-      console.log('❌ Admin Users API: No session found')
-      return NextResponse.json({ error: 'Unauthorized - Please sign in' }, { status: 401 })
-    }
-    
-    if (session.user.role !== 'ADMIN') {
-      console.log('❌ Admin Users API: User is not admin, role:', session.user.role)
-      return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 })
+    if (!securityCheck.authorized) {
+      return securityCheck.response!
     }
 
-    console.log('✅ Admin Users API: Fetching users from database...')
-    // Get all users
-    const users = await prisma.user.findMany({
+    // Get all users - Admin always first, then by creation date
+    const allUsers = await prisma.user.findMany({
       select: {
         id: true,
         name: true,
@@ -42,16 +27,21 @@ export async function GET(request: NextRequest) {
         _count: {
           select: {
             orders: true,
-            cart: true  // Changed from cartItems to cart (relation name in schema)
+            cart: true
           }
         }
-      },
-      orderBy: {
-        createdAt: 'desc'
       }
     })
 
-    console.log(`✅ Admin Users API: Successfully fetched ${users.length} users`)
+    // Sort: Admin users first, then by creation date (oldest first)
+    const users = allUsers.sort((a, b) => {
+      // Admin users always come first
+      if (a.role === 'ADMIN' && b.role !== 'ADMIN') return -1
+      if (a.role !== 'ADMIN' && b.role === 'ADMIN') return 1
+      // If both same role, sort by creation date (oldest first)
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    })
+
     return NextResponse.json(users)
   } catch (error: any) {
     console.error('Error fetching users:', error)
@@ -66,21 +56,22 @@ export async function GET(request: NextRequest) {
 // Delete user (Admin only)
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized - Admin access required' }, { status: 401 })
-    }
-
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get('id')
+    
+    // Enhanced admin security check
+    const securityCheck = await verifyAdminAccess(request, 'DELETE_USER', 'User', userId || null)
+    
+    if (!securityCheck.authorized) {
+      return securityCheck.response!
+    }
 
     if (!userId) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 })
     }
 
     // Prevent deleting yourself
-    if (userId === session.user.id) {
+    if (userId === securityCheck.userId) {
       return NextResponse.json({ error: 'Cannot delete your own account' }, { status: 400 })
     }
 

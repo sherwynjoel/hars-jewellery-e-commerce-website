@@ -115,7 +115,7 @@ export default function SignUpPage() {
           <Link href="/" className="inline-flex items-center space-x-3 justify-center">
             <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden ring-2 ring-gray-200 bg-white flex-shrink-0 shadow-lg">
               <Image 
-                src="/logo%20hars.png" 
+                src="/hars%20logo.jpg" 
                 alt="Hars Jewellery" 
                 width={80} 
                 height={80} 

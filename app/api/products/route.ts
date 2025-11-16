@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { verifyAdminAccess } from '@/lib/admin-security'
 import { revalidatePath } from 'next/cache'
 
 export const dynamic = 'force-dynamic'
@@ -50,6 +51,13 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Enhanced admin security check
+    const securityCheck = await verifyAdminAccess(request, 'CREATE_PRODUCT', 'Product', null)
+    
+    if (!securityCheck.authorized) {
+      return securityCheck.response!
+    }
+
     const body = await request.json()
     const { name, description, price, image, images = [], category, stockCount, goldWeightGrams, shippingCost } = body
 

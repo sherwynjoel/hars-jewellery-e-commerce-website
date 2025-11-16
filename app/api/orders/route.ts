@@ -15,6 +15,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized - Please sign in to place an order' }, { status: 401 })
     }
 
+    // Check if services are stopped
+    const serviceStatus = await prisma.serviceStatus.findUnique({
+      where: { id: 'service-status' }
+    })
+
+    if (serviceStatus?.isStopped) {
+      console.log('Order API: Services are stopped')
+      return NextResponse.json(
+        { 
+          error: 'Services are currently stopped',
+          message: serviceStatus.message || 'Our services are stopped today. Please check after 12 hours.'
+        },
+        { status: 503 } // Service Unavailable
+      )
+    }
+
     const body = await request.json()
     console.log('Order API: Request body:', { itemsCount: body.items?.length, total: body.total })
     console.log('Order API: Items details:', body.items)

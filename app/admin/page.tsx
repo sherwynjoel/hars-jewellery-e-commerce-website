@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Plus, Edit, Trash2, Eye, Crown, Package, Users, DollarSign } from 'lucide-react'
+import { Plus, Edit, Trash2, Eye, Crown, Package, Users, DollarSign, Loader2, Power, PowerOff, Database } from 'lucide-react'
 import Navigation from '@/components/Navigation'
 import ProductForm from '@/components/ProductForm'
 import DeployButton from '@/components/DeployButton'
@@ -35,6 +35,9 @@ export default function AdminPanel() {
   const [goldPrice, setGoldPrice] = useState<string>('')
   const [savingGold, setSavingGold] = useState(false)
   const [totalUsers, setTotalUsers] = useState<number>(0)
+  const [checkingVerification, setCheckingVerification] = useState(true)
+  const [serviceStatus, setServiceStatus] = useState<{ isStopped: boolean; message: string } | null>(null)
+  const [togglingService, setTogglingService] = useState(false)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -43,9 +46,43 @@ export default function AdminPanel() {
       router.push('/')
       return
     }
+    
+    // Check if email matches the allowed admin email
+    const allowedEmail = 'harsjewellery2005@gmail.com'
+    if (session.user.email?.toLowerCase().trim() !== allowedEmail.toLowerCase().trim()) {
+      toast.error('Access denied - Admin access restricted to authorized email only')
+      router.push('/')
+      return
+    }
 
-    fetchProducts()
+    // Check admin panel verification status
+    checkVerificationStatus()
   }, [session, status, router])
+
+  const checkVerificationStatus = async () => {
+    setCheckingVerification(true)
+    try {
+      const response = await fetch('/api/admin/request-access', {
+        method: 'GET'
+      })
+      const data = await response.json()
+      
+      if (!data.verified) {
+        // Redirect to verification page
+        router.push('/admin/verify-access')
+        return
+      }
+      
+      // If verified, fetch products and service status
+      setCheckingVerification(false)
+      fetchProducts()
+      fetchServiceStatus()
+    } catch (error) {
+      console.error('Error checking verification:', error)
+      // If check fails, redirect to verification page
+      router.push('/admin/verify-access')
+    }
+  }
 
   const fetchProducts = async () => {
     try {
@@ -74,6 +111,46 @@ export default function AdminPanel() {
       })
       .catch(() => {})
   }, [])
+
+  const fetchServiceStatus = async () => {
+    try {
+      const response = await fetch('/api/admin/service-status')
+      const data = await response.json()
+      setServiceStatus(data)
+    } catch (error) {
+      console.error('Error fetching service status:', error)
+    }
+  }
+
+  const toggleServiceStatus = async () => {
+    if (!serviceStatus) return
+    
+    setTogglingService(true)
+    try {
+      const response = await fetch('/api/admin/service-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isStopped: !serviceStatus.isStopped,
+          message: serviceStatus.message || 'Our services are stopped today. Please check after 12 hours.'
+        })
+      })
+
+      const data = await response.json()
+      
+      if (response.ok) {
+        setServiceStatus(data.status)
+        toast.success(data.message)
+      } else {
+        toast.error(data.error || 'Failed to update service status')
+      }
+    } catch (error) {
+      console.error('Error toggling service status:', error)
+      toast.error('Failed to update service status')
+    } finally {
+      setTogglingService(false)
+    }
+  }
 
   const saveGoldPrice = async () => {
     if (!goldPrice) return
@@ -203,10 +280,87 @@ export default function AdminPanel() {
                   <span className="sm:hidden">Users</span>
                 </Link>
 
+                <Link
+                  href="/admin/database"
+                  className="btn-secondary inline-flex items-center justify-center gap-2 text-sm sm:text-base px-4 sm:px-6 py-2 sm:py-3"
+                >
+                  <Database className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span className="hidden sm:inline-flex flex-col items-center">
+                    <span>View</span>
+                    <span>Database</span>
+                  </span>
+                  <span className="sm:hidden">DB</span>
+                </Link>
+
                 <DeployButton />
               </div>
             </div>
           </motion.div>
+
+          {/* Service Status Control */}
+          {serviceStatus && (
+            <div className="mb-6">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.15 }}
+                className={`rounded-lg p-5 shadow-md ${
+                  serviceStatus.isStopped 
+                    ? 'bg-red-900 border-2 border-red-700' 
+                    : 'bg-green-900 border-2 border-green-700'
+                }`}
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-1 flex items-center gap-2">
+                      {serviceStatus.isStopped ? (
+                        <>
+                          <PowerOff className="w-5 h-5" />
+                          Services Stopped
+                        </>
+                      ) : (
+                        <>
+                          <Power className="w-5 h-5" />
+                          Services Running
+                        </>
+                      )}
+                    </h3>
+                    <p className="text-gray-300 text-sm">
+                      {serviceStatus.isStopped 
+                        ? 'Users cannot place orders. Products are still visible.' 
+                        : 'All services are operational. Users can place orders.'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={toggleServiceStatus}
+                    disabled={togglingService}
+                    className={`font-medium px-6 py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 ${
+                      serviceStatus.isStopped
+                        ? 'bg-green-600 hover:bg-green-700 text-white'
+                        : 'bg-red-600 hover:bg-red-700 text-white'
+                    }`}
+                  >
+                    {togglingService ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Updating...
+                      </>
+                    ) : serviceStatus.isStopped ? (
+                      <>
+                        <Power className="w-4 h-4" />
+                        Resume Services
+                      </>
+                    ) : (
+                      <>
+                        <PowerOff className="w-4 h-4" />
+                        Stop Services
+                      </>
+                    )}
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
 
           {/* Gold Price */}
           <div className="mb-6">

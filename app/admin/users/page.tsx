@@ -36,6 +36,14 @@ export default function AdminUsersPage() {
       router.push('/')
       return
     }
+    
+    // Check if email matches the allowed admin email
+    const allowedEmail = 'harsjewellery2005@gmail.com'
+    if (session.user.email?.toLowerCase().trim() !== allowedEmail.toLowerCase().trim()) {
+      toast.error('Access denied - Admin access restricted to authorized email only')
+      router.push('/')
+      return
+    }
 
     fetchUsers()
   }, [session, status, router])

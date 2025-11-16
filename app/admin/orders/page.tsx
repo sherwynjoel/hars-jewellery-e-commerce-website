@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import Navigation from '@/components/Navigation'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
+import { CheckCircle, XCircle, Shield } from 'lucide-react'
 
 interface AdminOrderItem {
   id: string
@@ -24,6 +25,20 @@ interface AdminOrder {
   trackingCarrier?: string | null
   trackingUrl?: string | null
   items: AdminOrderItem[]
+  // Delivery/contact details
+  customerName?: string
+  email?: string
+  phone?: string
+  addressLine1?: string
+  addressLine2?: string | null
+  city?: string
+  state?: string
+  postalCode?: string
+  // Address verification
+  addressVerified?: boolean
+  addressVerifiedAt?: string | null
+  addressVerifiedBy?: string | null
+  addressVerificationMethod?: string | null
 }
 
 export default function AdminOrdersPage() {
@@ -73,6 +88,28 @@ export default function AdminOrdersPage() {
     }
   }
 
+  const toggleAddressVerification = async (orderId: string, currentStatus: boolean) => {
+    try {
+      const res = await fetch(`/api/orders/${orderId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          addressVerified: !currentStatus,
+          addressVerificationMethod: 'ADMIN'
+        })
+      })
+      if (res.ok) {
+        toast.success(currentStatus ? 'Address marked as unverified' : 'Address verified successfully')
+        fetchOrders()
+      } else {
+        const err = await res.json()
+        toast.error(err.error || 'Failed to update verification status')
+      }
+    } catch {
+      toast.error('Failed to update verification status')
+    }
+  }
+
   if (status === 'loading') return null
   if (!session || session.user.role !== 'ADMIN') return null
 
@@ -114,11 +151,96 @@ export default function AdminOrdersPage() {
                     <div>
                       <div className="text-sm text-gray-500">Order #{order.id.slice(-8).toUpperCase()}</div>
                       <div className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleString()}</div>
-                      <div className="text-sm text-gray-700 mt-1">Customer: {order.user?.name || order.user?.email}</div>
+                      <div className="text-sm text-gray-700 mt-1">Customer: {order.customerName || order.user?.name || order.user?.email}</div>
                     </div>
                     <div className="text-right">
                       <div className="text-lg font-bold text-black">₹{order.total.toLocaleString('en-IN')}</div>
                       <div className="text-xs text-gray-600">{order.status}</div>
+                    </div>
+                  </div>
+
+                  {/* Delivery Address Section */}
+                  {(order.addressLine1 || order.city || order.state || order.phone || order.email) && (
+                    <div className={`mb-4 p-4 rounded-lg border-2 ${
+                      order.addressVerified 
+                        ? 'bg-green-50 border-green-300' 
+                        : 'bg-yellow-50 border-yellow-300'
+                    }`}>
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                          <span>📍</span> Delivery Address & Contact
+                        </h3>
+                        <button
+                          onClick={() => toggleAddressVerification(order.id, order.addressVerified || false)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 ${
+                            order.addressVerified
+                              ? 'bg-green-600 hover:bg-green-700 text-white'
+                              : 'bg-yellow-600 hover:bg-yellow-700 text-white'
+                          }`}
+                        >
+                          {order.addressVerified ? (
+                            <>
+                              <CheckCircle className="w-3.5 h-3.5" />
+                              Verified
+                            </>
+                          ) : (
+                            <>
+                              <XCircle className="w-3.5 h-3.5" />
+                              Verify Address
+                            </>
+                          )}
+                        </button>
+                      </div>
+                      {order.addressVerified && order.addressVerifiedAt && (
+                        <div className="mb-2 text-xs text-green-700 flex items-center gap-1">
+                          <Shield className="w-3 h-3" />
+                          Verified on {new Date(order.addressVerifiedAt).toLocaleString()}
+                        </div>
+                      )}
+                      <div className="text-sm text-gray-700 space-y-1.5">
+                        {order.customerName && (
+                          <div><strong className="text-gray-900">Name:</strong> {order.customerName}</div>
+                        )}
+                        {order.phone && (
+                          <div><strong className="text-gray-900">Phone:</strong> {order.phone}</div>
+                        )}
+                        {order.email && (
+                          <div><strong className="text-gray-900">Email:</strong> {order.email}</div>
+                        )}
+                        {(order.addressLine1 || order.addressLine2 || order.city || order.state || order.postalCode) && (
+                          <div className="mt-2 pt-2 border-t border-gray-300">
+                            <strong className="text-gray-900">Address:</strong>
+                            <div className="mt-1 pl-4">
+                              {order.addressLine1 && <div>{order.addressLine1}</div>}
+                              {order.addressLine2 && <div>{order.addressLine2}</div>}
+                              {[order.city, order.state, order.postalCode].filter(Boolean).length > 0 && (
+                                <div>{[order.city, order.state, order.postalCode].filter(Boolean).join(', ')}</div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Order Items */}
+                  <div className="mb-4">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-2">Order Items</h3>
+                    <div className="space-y-2">
+                      {order.items.map((item) => (
+                        <div key={item.id} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
+                          <img
+                            src={item.product.image || '/placeholder-jewelry.jpg'}
+                            alt={item.product.name}
+                            className="w-12 h-12 rounded-lg object-cover"
+                          />
+                          <div className="flex-1">
+                            <div className="font-medium text-gray-900">{item.product.name}</div>
+                            <div className="text-xs text-gray-500">Qty: {item.quantity} × ₹{item.price.toLocaleString('en-IN')}</div>
+                          </div>
+                          <div className="font-semibold text-gray-900">₹{(item.price * item.quantity).toLocaleString('en-IN')}</div>
+                        </div>
+                      ))}
                     </div>
                   </div>
 

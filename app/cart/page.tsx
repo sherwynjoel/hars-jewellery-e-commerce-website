@@ -16,6 +16,14 @@ export default function CartPage() {
   const router = useRouter()
   const { items, updateQuantity, removeItem, clearCart, getTotalPrice, getTotalItems, getSubtotal, getShippingCost, getTaxAmount, getTotalWithTax } = useCartStore()
   const [loading, setLoading] = useState(false)
+  const [serviceStatus, setServiceStatus] = useState<{ isStopped: boolean; message: string } | null>(null)
+  const [validatingPincode, setValidatingPincode] = useState(false)
+  const [pincodeValidation, setPincodeValidation] = useState<{
+    isValid: boolean
+    city: string | null
+    state: string | null
+    error: string | null
+  } | null>(null)
   const [customer, setCustomer] = useState({
     name: '',
     email: '',
@@ -36,6 +44,12 @@ export default function CartPage() {
         setCustomer((prev) => ({ ...prev, ...parsed }))
       }
     } catch {}
+    
+    // Fetch service status
+    fetch('/api/admin/service-status')
+      .then(r => r.json())
+      .then(data => setServiceStatus(data))
+      .catch(() => {})
   }, [])
 
   const handleSaveAddress = () => {
@@ -51,8 +65,80 @@ export default function CartPage() {
     }
   }
 
+  const validatePincode = async (pincode: string) => {
+    // Only validate if pincode is 6 digits
+    if (!pincode || pincode.length !== 6 || !/^\d{6}$/.test(pincode)) {
+      setPincodeValidation(null)
+      return
+    }
+
+    setValidatingPincode(true)
+    setPincodeValidation(null)
+
+    try {
+      const response = await fetch(`https://api.postalpincode.in/pincode/${pincode}`)
+      const data = await response.json()
+
+      if (data && data[0] && data[0].Status === 'Success' && data[0].PostOffice && data[0].PostOffice.length > 0) {
+        const postOffice = data[0].PostOffice[0]
+        const apiCity = postOffice.District || postOffice.Name || ''
+        const apiState = postOffice.State || ''
+
+        setPincodeValidation({
+          isValid: true,
+          city: apiCity,
+          state: apiState,
+          error: null
+        })
+
+        // Auto-fill city and state
+        setCustomer(prev => ({
+          ...prev,
+          city: apiCity,
+          state: apiState
+        }))
+
+        toast.success('Address validated! City and State auto-filled.')
+      } else {
+        setPincodeValidation({
+          isValid: false,
+          city: null,
+          state: null,
+          error: 'Invalid pincode. Please check and try again.'
+        })
+        toast.error('Invalid pincode')
+      }
+    } catch (error) {
+      console.error('Pincode validation error:', error)
+      setPincodeValidation({
+        isValid: false,
+        city: null,
+        state: null,
+        error: 'Failed to validate pincode. Please try again.'
+      })
+      toast.error('Failed to validate pincode')
+    } finally {
+      setValidatingPincode(false)
+    }
+  }
+
+  const checkCityStateMatch = () => {
+    if (!pincodeValidation || !pincodeValidation.isValid) return true
+
+    const userCity = customer.city.trim().toLowerCase()
+    const userState = customer.state.trim().toLowerCase()
+    const apiCity = pincodeValidation.city?.toLowerCase() || ''
+    const apiState = pincodeValidation.state?.toLowerCase() || ''
+
+    // Check if user entered city/state matches API response
+    const cityMatches = userCity === apiCity || userCity.includes(apiCity) || apiCity.includes(userCity)
+    const stateMatches = userState === apiState || userState.includes(apiState) || apiState.includes(userState)
+
+    return cityMatches && stateMatches
+  }
+
   const isCustomerValid = () => {
-    return (
+    const basicValid = (
       customer.name.trim() &&
       customer.email.trim() &&
       customer.phone.trim() &&
@@ -61,6 +147,13 @@ export default function CartPage() {
       customer.state.trim() &&
       customer.postalCode.trim()
     )
+
+    // If pincode is validated, also check if city/state matches
+    if (pincodeValidation && pincodeValidation.isValid) {
+      return basicValid && checkCityStateMatch()
+    }
+
+    return basicValid
   }
 
   const handleCheckout = async () => {
@@ -73,6 +166,33 @@ export default function CartPage() {
     if (items.length === 0) {
       toast.error('Your cart is empty')
       return
+    }
+
+    // Validate pincode if entered
+    if (customer.postalCode.length === 6 && !pincodeValidation?.isValid) {
+      toast.error('Please validate your pincode before checkout')
+      await validatePincode(customer.postalCode)
+      return
+    }
+
+    // Check if city/state matches validated pincode
+    if (pincodeValidation && pincodeValidation.isValid && !checkCityStateMatch()) {
+      toast.error('City and State must match the pincode. Please correct your address.')
+      return
+    }
+
+    // Check if services are stopped
+    try {
+      const statusResponse = await fetch('/api/admin/service-status')
+      const statusData = await statusResponse.json()
+      
+      if (statusData.isStopped) {
+        toast.error(statusData.message || 'Our services are stopped today. Please check after 12 hours.')
+        return
+      }
+    } catch (error) {
+      console.error('Error checking service status:', error)
+      // Continue with checkout if status check fails
     }
 
     setLoading(true)
@@ -97,7 +217,8 @@ export default function CartPage() {
             quantity: item.quantity,
             price: item.price
           })),
-          total: getTotalWithTax()
+          total: getTotalWithTax(),
+          customer: customer
         })
       })
 
@@ -112,7 +233,12 @@ export default function CartPage() {
       } else {
         const errorData = await response.json()
         console.error('Cart: Order placement error:', errorData)
-        toast.error(errorData.error || 'Failed to place order')
+        // Show service stopped message if applicable
+        if (response.status === 503 && errorData.message) {
+          toast.error(errorData.message)
+        } else {
+          toast.error(errorData.error || errorData.message || 'Failed to place order')
+        }
       }
     } catch (error) {
       console.error('Cart: Order placement error:', error)
@@ -181,6 +307,34 @@ export default function CartPage() {
               {getTotalItems()} item{getTotalItems() !== 1 ? 's' : ''} in your cart
             </p>
           </motion.div>
+
+          {/* Service Stopped Banner */}
+          {serviceStatus?.isStopped && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 p-6 bg-red-50 border-2 border-red-300 rounded-2xl shadow-lg"
+            >
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                    <span className="text-2xl">⚠️</span>
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-red-900 mb-2">
+                    Services Temporarily Stopped
+                  </h3>
+                  <p className="text-red-800 mb-2">
+                    {serviceStatus.message || 'Our services are stopped today. Please check after 12 hours.'}
+                  </p>
+                  <p className="text-sm text-red-700">
+                    You can still browse and view all products, but orders cannot be placed at this time.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
 
           <div className="grid lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {/* Cart Items */}
@@ -315,24 +469,71 @@ export default function CartPage() {
                     onChange={(e) => setCustomer({ ...customer, addressLine2: e.target.value })}
                   />
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
-                    <input
-                      className="input-field"
-                      placeholder="City"
-                      value={customer.city}
-                      onChange={(e) => setCustomer({ ...customer, city: e.target.value })}
-                    />
-                    <input
-                      className="input-field"
-                      placeholder="State"
-                      value={customer.state}
-                      onChange={(e) => setCustomer({ ...customer, state: e.target.value })}
-                    />
-                    <input
-                      className="input-field"
-                      placeholder="Postal Code"
-                      value={customer.postalCode}
-                      onChange={(e) => setCustomer({ ...customer, postalCode: e.target.value })}
-                    />
+                    <div className="relative">
+                      <input
+                        className={`input-field ${pincodeValidation?.isValid ? 'border-green-500' : pincodeValidation?.error ? 'border-red-500' : ''}`}
+                        placeholder="Postal Code"
+                        type="text"
+                        maxLength={6}
+                        value={customer.postalCode}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '') // Only numbers
+                          setCustomer({ ...customer, postalCode: value })
+                          setPincodeValidation(null) // Reset validation when user types
+                          
+                          // Auto-validate when 6 digits are entered
+                          if (value.length === 6) {
+                            setTimeout(() => validatePincode(value), 300) // Small delay to avoid too many API calls
+                          }
+                        }}
+                        onBlur={() => {
+                          if (customer.postalCode.length === 6) {
+                            validatePincode(customer.postalCode)
+                          }
+                        }}
+                        disabled={validatingPincode}
+                      />
+                      {validatingPincode && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+                        </div>
+                      )}
+                      {pincodeValidation?.isValid && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          <span className="text-green-600 text-lg">✓</span>
+                        </div>
+                      )}
+                      {pincodeValidation?.error && (
+                        <p className="text-xs text-red-600 mt-1">{pincodeValidation.error}</p>
+                      )}
+                      {pincodeValidation?.isValid && checkCityStateMatch() && (
+                        <p className="text-xs text-green-600 mt-1">✓ Address validated</p>
+                      )}
+                    </div>
+                    <div className="relative">
+                      <input
+                        className={`input-field ${pincodeValidation && pincodeValidation.isValid && checkCityStateMatch() ? 'border-green-500' : pincodeValidation && !checkCityStateMatch() ? 'border-red-500' : ''}`}
+                        placeholder="City"
+                        value={customer.city}
+                        onChange={(e) => setCustomer({ ...customer, city: e.target.value })}
+                        disabled={validatingPincode}
+                      />
+                      {pincodeValidation && pincodeValidation.isValid && !checkCityStateMatch() && (
+                        <p className="text-xs text-red-600 mt-1">City doesn't match pincode</p>
+                      )}
+                    </div>
+                    <div className="relative">
+                      <input
+                        className={`input-field ${pincodeValidation && pincodeValidation.isValid && checkCityStateMatch() ? 'border-green-500' : pincodeValidation && !checkCityStateMatch() ? 'border-red-500' : ''}`}
+                        placeholder="State"
+                        value={customer.state}
+                        onChange={(e) => setCustomer({ ...customer, state: e.target.value })}
+                        disabled={validatingPincode}
+                      />
+                      {pincodeValidation && pincodeValidation.isValid && !checkCityStateMatch() && (
+                        <p className="text-xs text-red-600 mt-1">State doesn't match pincode</p>
+                      )}
+                    </div>
                   </div>
                   <button
                     type="button"

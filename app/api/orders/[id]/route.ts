@@ -47,7 +47,7 @@ export async function PUT(
     }
 
     const body = await request.json()
-    const { status, trackingNumber, trackingCarrier, trackingUrl, shippedAt, deliveredAt } = body
+    const { status, trackingNumber, trackingCarrier, trackingUrl, shippedAt, deliveredAt, addressVerified, addressVerificationMethod } = body
 
     const data: any = {}
     if (status) data.status = status
@@ -56,6 +56,13 @@ export async function PUT(
     if (typeof trackingUrl !== 'undefined') data.trackingUrl = trackingUrl
     if (typeof shippedAt !== 'undefined') data.shippedAt = shippedAt ? new Date(shippedAt) : null
     if (typeof deliveredAt !== 'undefined') data.deliveredAt = deliveredAt ? new Date(deliveredAt) : null
+    // Address verification
+    if (typeof addressVerified !== 'undefined') {
+      data.addressVerified = addressVerified
+      data.addressVerifiedAt = addressVerified ? new Date() : null
+      data.addressVerifiedBy = addressVerified ? session.user.id : null
+    }
+    if (addressVerificationMethod) data.addressVerificationMethod = addressVerificationMethod
 
     const order = await prisma.order.update({
       where: { id: params.id },

@@ -28,7 +28,7 @@ export default function Footer() {
           >
             <Link href="/" className="flex items-center justify-center md:justify-start space-x-2 mb-6">
               <div className="w-10 h-10 rounded-full overflow-hidden ring-1 ring-gray-700 bg-white">
-                <Image src="/logo%20hars.png" alt="Hars Jewellery" width={40} height={40} />
+                <Image src="/hars%20logo.jpg" alt="Hars Jewellery" width={40} height={40} />
               </div>
               <span className="font-serif text-2xl font-bold">
                 Hars Jewellery
@@ -42,7 +42,7 @@ export default function Footer() {
             <div className="space-y-3 text-center md:text-left">
               <div className="flex items-center justify-center md:justify-start space-x-3 text-gray-300">
                 <Mail className="w-5 h-5" />
-                <span>info@harsjewellery.com</span>
+                <span>harsjewellery2005@gmail.com</span>
               </div>
               <div className="flex items-center justify-center md:justify-start space-x-3 text-gray-300">
                 <Phone className="w-5 h-5" />

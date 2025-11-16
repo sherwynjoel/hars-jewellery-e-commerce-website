@@ -51,7 +51,7 @@ export default function Navigation() {
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-1.5 sm:space-x-2 flex-shrink-0 min-w-0">
             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden ring-1 ring-gray-200 bg-white flex-shrink-0">
-              <Image src="/logo%20hars.png" alt="Hars Jewellery" width={40} height={40} priority />
+              <Image src="/hars%20logo.jpg" alt="Hars Jewellery" width={40} height={40} priority />
             </div>
             <div className="font-serif text-sm sm:text-xl lg:text-2xl font-bold text-dark-900 truncate max-w-[120px] sm:max-w-none">
               Hars Jewellery
@@ -98,7 +98,7 @@ export default function Navigation() {
             {/* User Menu - Desktop Only */}
             {session ? (
               <div className="hidden md:flex items-center space-x-2 lg:space-x-3">
-                {session.user.role === 'ADMIN' && (
+                {session.user.role === 'ADMIN' && session.user.email?.toLowerCase().trim() === 'harsjewellery2005@gmail.com' && (
                   <Link
                     href="/admin"
                     className="p-2 text-dark-900 hover:text-black transition-all duration-300 rounded-lg hover:bg-white/20 backdrop-blur-sm"
@@ -120,7 +120,21 @@ export default function Navigation() {
                   My Orders
                 </Link>
                 <button
-                  onClick={() => signOut()}
+                  onClick={async () => {
+                    // Clear admin verification before signing out
+                    if (session?.user?.role === 'ADMIN') {
+                      try {
+                        await fetch('/api/auth/clear-admin-verification', {
+                          method: 'POST',
+                          credentials: 'include'
+                        })
+                      } catch (error) {
+                        console.error('Error clearing admin verification:', error)
+                        // Continue with sign out even if this fails
+                      }
+                    }
+                    signOut()
+                  }}
                   className="text-sm text-dark-700 hover:text-dark-800 transition-colors"
                 >
                   Sign Out
@@ -184,7 +198,7 @@ export default function Navigation() {
                 ))}
                 {session ? (
                   <>
-                    {session.user.role === 'ADMIN' && (
+                    {session.user.role === 'ADMIN' && session.user.email?.toLowerCase().trim() === 'harsjewellery2005@gmail.com' && (
                       <Link
                         href="/admin"
                         className="flex items-center gap-3 px-4 py-3 text-dark-900 hover:text-black hover:bg-white/25 backdrop-blur-sm rounded-lg transition-all duration-300 text-base font-medium touch-manipulation"
@@ -219,10 +233,24 @@ export default function Navigation() {
                       My Orders
                     </Link>
                     <button
-                      onClick={(e) => {
+                      onClick={async (e) => {
                         e.preventDefault()
                         e.stopPropagation()
                         setIsMenuOpen(false)
+                        
+                        // Clear admin verification before signing out
+                        if (session?.user?.role === 'ADMIN') {
+                          try {
+                            await fetch('/api/auth/clear-admin-verification', {
+                              method: 'POST',
+                              credentials: 'include'
+                            })
+                          } catch (error) {
+                            console.error('Error clearing admin verification:', error)
+                            // Continue with sign out even if this fails
+                          }
+                        }
+                        
                         signOut()
                       }}
                       className="w-full text-left px-4 py-3 text-dark-900 hover:text-black hover:bg-white/25 backdrop-blur-sm rounded-lg transition-all duration-300 text-base font-medium touch-manipulation"

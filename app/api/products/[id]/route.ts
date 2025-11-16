@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { verifyAdminAccess } from '@/lib/admin-security'
 
 export async function GET(
   request: NextRequest,
@@ -27,6 +28,13 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Enhanced admin security check
+    const securityCheck = await verifyAdminAccess(request, 'UPDATE_PRODUCT', 'Product', params.id)
+    
+    if (!securityCheck.authorized) {
+      return securityCheck.response!
+    }
+
     const body = await request.json()
     const { name, description, price, image, images = [], category, stockCount, goldWeightGrams, shippingCost } = body
 
@@ -98,6 +106,13 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Enhanced admin security check
+    const securityCheck = await verifyAdminAccess(request, 'DELETE_PRODUCT', 'Product', params.id)
+    
+    if (!securityCheck.authorized) {
+      return securityCheck.response!
+    }
+
     await prisma.product.delete({
       where: { id: params.id }
     })
