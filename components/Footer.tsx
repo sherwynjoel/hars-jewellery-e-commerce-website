@@ -129,6 +129,23 @@ export default function Footer() {
                   {status.message}
                 </p>
               )}
+              <div className="mt-8">
+                <h4 className="text-base font-semibold text-gray-100 mb-3">Policies &amp; Support</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-400">
+                  <Link href="/terms" className="hover:text-white transition-colors">
+                    Terms &amp; Conditions
+                  </Link>
+                  <Link href="/privacy" className="hover:text-white transition-colors">
+                    Privacy Policy
+                  </Link>
+                  <Link href="/refund-policy" className="hover:text-white transition-colors">
+                    Refund &amp; Cancellation
+                  </Link>
+                  <Link href="/shipping-policy" className="hover:text-white transition-colors">
+                    Shipping Policy
+                  </Link>
+                </div>
+              </div>
             </div>
           </motion.div>
         </div>
