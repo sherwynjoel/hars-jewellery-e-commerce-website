@@ -12,7 +12,7 @@ export default function WhatsAppButton() {
 
   return (
     <motion.div
-      className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50"
+      className="fixed bottom-4 right-4 sm:bottom-5 sm:right-5 z-50"
       initial={{ scale: 0, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ delay: 0.5, type: 'spring', stiffness: 200 }}
@@ -21,20 +21,20 @@ export default function WhatsAppButton() {
         href={whatsappUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="relative bg-[#25D366] hover:bg-[#20BA5A] active:bg-[#1DA851] text-white rounded-full p-3 sm:p-4 shadow-2xl hover:shadow-[#25D366]/50 active:scale-95 transition-all duration-300 flex items-center justify-center group touch-manipulation"
+        className="relative bg-black hover:bg-gray-900 active:bg-gray-800 text-white rounded-full p-2.5 sm:p-3 shadow-lg active:scale-95 transition-all duration-200 flex items-center justify-center touch-manipulation"
         aria-label="Contact us on WhatsApp"
       >
-        <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6" />
-        <span className="ml-2 font-medium hidden md:inline-block group-hover:block whitespace-nowrap text-sm sm:text-base">
+        <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+        <span className="ml-2 font-medium hidden lg:inline-block whitespace-nowrap text-xs tracking-wide">
           Ask Us
         </span>
         
         {/* Pulse animation ring */}
         <motion.span
-          className="absolute inset-0 rounded-full bg-[#25D366] -z-10"
+          className="absolute inset-0 rounded-full bg-black -z-10"
           animate={{
-            scale: [1, 1.4, 1],
-            opacity: [0.6, 0, 0.6],
+            scale: [1, 1.3, 1],
+            opacity: [0.3, 0, 0.3],
           }}
           transition={{
             duration: 2,
