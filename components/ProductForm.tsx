@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Upload, Image as ImageIcon } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { isValidImageUrl } from '@/lib/image'
 
 interface Product {
   id: string
@@ -50,14 +51,16 @@ export default function ProductForm({ product, onClose, onSubmit }: ProductFormP
     if (product) {
       const productPrice = product.price
       setBasePrice(productPrice)
+      const gallery = product.images?.map(i => i.url).filter((url) => isValidImageUrl(url)) || []
+      const resolvedPrimary = isValidImageUrl(product.image) ? product.image : (gallery[0] || '')
       setFormData({
         name: product.name,
         description: product.description,
         price: productPrice.toString(),
         category: product.category,
         stockCount: product.stockCount.toString(),
-        image: product.image,
-        images: (product.images?.map(i => i.url) || (product.image ? [product.image] : [])) as string[],
+        image: resolvedPrimary,
+        images: gallery.length ? gallery : (resolvedPrimary ? [resolvedPrimary] : []),
         goldWeightGrams: (product.goldWeightGrams ?? '').toString(),
         makingCostAndWastage: '',
         shippingCost: (product.shippingCost ?? '').toString()
@@ -149,7 +152,11 @@ export default function ProductForm({ product, onClose, onSubmit }: ProductFormP
     if (files.length) {
       // Show preview immediately
       const previews = files.map(f => URL.createObjectURL(f))
-      setFormData(prev => ({ ...prev, images: [...prev.images, ...previews], image: prev.image || previews[0] }))
+      setFormData(prev => ({
+        ...prev,
+        images: [...prev.images, ...previews],
+        image: prev.image || previews[0] || prev.image
+      }))
 
       // Upload file to server
       try {
@@ -167,7 +174,16 @@ export default function ProductForm({ product, onClose, onSubmit }: ProductFormP
           uploaded.push(result.imageUrl)
         }
         if (uploaded.length) {
-          setFormData(prev => ({ ...prev, images: [...prev.images.filter(u => !u.startsWith('blob:')), ...uploaded], image: prev.image || uploaded[0] }))
+          setFormData(prev => {
+            const existingReal = prev.images.filter(url => !url.startsWith('blob:'))
+            const nextImages = [...existingReal, ...uploaded]
+            const resolvedPrimary = isValidImageUrl(prev.image) ? prev.image : (uploaded[0] || existingReal[0] || '')
+            return {
+              ...prev,
+              images: nextImages,
+              image: resolvedPrimary
+            }
+          })
           toast.success('Images uploaded successfully!')
         }
       } catch (error) {

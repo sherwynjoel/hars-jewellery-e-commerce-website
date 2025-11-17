@@ -2,6 +2,18 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyAdminAccess } from '@/lib/admin-security'
 import { revalidatePath } from 'next/cache'
+import { normalizeImageList, pickPrimaryImage, isValidImageUrl } from '@/lib/image'
+
+const extractGallery = (images?: { url: string | null }[]) =>
+  (images ?? []).map((img) => (img?.url ?? '').trim()).filter((url) => isValidImageUrl(url))
+
+const sanitizeProduct = (product: any) => {
+  const gallery = extractGallery(product?.images)
+  return {
+    ...product,
+    image: pickPrimaryImage(product?.image, gallery)
+  }
+}
 
 export const dynamic = 'force-dynamic'
 
@@ -38,7 +50,8 @@ export async function GET(request: NextRequest) {
       include: { images: { orderBy: { position: 'asc' } } }
     })
 
-    return new NextResponse(JSON.stringify(products), {
+    const sanitized = products.map(sanitizeProduct)
+    return new NextResponse(JSON.stringify(sanitized), {
       headers: {
         'Content-Type': 'application/json',
         'Cache-Control': 'no-store'
@@ -62,8 +75,12 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { name, description, price, image, images = [], category, stockCount, goldWeightGrams, shippingCost } = body
 
-    const normalizedImages: string[] = Array.isArray(images) ? images.filter(Boolean) : []
-    const primaryImage = image || normalizedImages[0] || ''
+    const normalizedImages = normalizeImageList(images)
+    const primaryImage = pickPrimaryImage(image, normalizedImages)
+
+    if (!primaryImage) {
+      return NextResponse.json({ error: 'Please upload at least one valid product image.' }, { status: 400 })
+    }
 
     const product = await prisma.product.create({
       data: {
@@ -76,9 +93,11 @@ export async function POST(request: NextRequest) {
         inStock: parseInt(stockCount) > 0,
         goldWeightGrams: typeof goldWeightGrams === 'number' ? goldWeightGrams : goldWeightGrams ? parseFloat(goldWeightGrams) : null,
         shippingCost: shippingCost ? parseFloat(shippingCost) : 0,
-        images: {
-          create: normalizedImages.map((url: string, index: number) => ({ url, position: index }))
-        }
+        images: normalizedImages.length
+          ? {
+              create: normalizedImages.map((url: string, index: number) => ({ url, position: index }))
+            }
+          : undefined
       },
       include: { images: true }
     })
@@ -91,7 +110,7 @@ export async function POST(request: NextRequest) {
       // no-op if revalidation is not available in this context
     }
 
-    return new NextResponse(JSON.stringify(product), {
+    return new NextResponse(JSON.stringify(sanitizeProduct(product)), {
       headers: {
         'Content-Type': 'application/json',
         'Cache-Control': 'no-store'

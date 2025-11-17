@@ -1,6 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyAdminAccess } from '@/lib/admin-security'
+import { normalizeImageList, pickPrimaryImage, isValidImageUrl } from '@/lib/image'
+
+const extractGallery = (images?: { url: string | null }[]) =>
+  (images ?? []).map((img) => (img?.url ?? '').trim()).filter((url) => isValidImageUrl(url))
+
+const sanitizeProduct = (product: any) => {
+  const gallery = extractGallery(product?.images)
+  return {
+    ...product,
+    image: pickPrimaryImage(product?.image, gallery)
+  }
+}
 
 export async function GET(
   request: NextRequest,
@@ -16,7 +28,7 @@ export async function GET(
       return NextResponse.json({ error: 'Product not found' }, { status: 404 })
     }
 
-    return NextResponse.json(product)
+    return NextResponse.json(sanitizeProduct(product))
   } catch (error) {
     console.error('Error fetching product:', error)
     return NextResponse.json({ error: 'Failed to fetch product' }, { status: 500 })
@@ -43,8 +55,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    const normalizedImages: string[] = Array.isArray(images) ? images.filter(Boolean) : []
-    const primaryImage = image || normalizedImages[0] || ''
+    const normalizedImages = normalizeImageList(images)
     
     const parsedPrice = parseFloat(price)
     if (isNaN(parsedPrice) || parsedPrice < 0) {
@@ -62,16 +73,27 @@ export async function PUT(
     }
 
     // Check if product exists
-    const existing = await prisma.product.findUnique({ where: { id: params.id } })
+    const existing = await prisma.product.findUnique({
+      where: { id: params.id },
+      include: { images: { orderBy: { position: 'asc' } } }
+    })
     if (!existing) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 })
+    }
+
+    const existingGallery = extractGallery(existing.images)
+    const galleryForPrimary = normalizedImages.length ? normalizedImages : existingGallery
+    const primaryImageCandidate = pickPrimaryImage(image, galleryForPrimary.length ? galleryForPrimary : [existing.image])
+
+    if (!primaryImageCandidate) {
+      return NextResponse.json({ error: 'Please upload at least one valid product image.' }, { status: 400 })
     }
 
     const updateData: any = {
       name,
       description,
       price: parsedPrice,
-      image: primaryImage,
+      image: primaryImageCandidate,
       category,
       stockCount: parsedStockCount,
       inStock: parsedStockCount > 0,
@@ -79,10 +101,11 @@ export async function PUT(
       shippingCost: shippingCost ? parseFloat(shippingCost) : 0
     }
 
-    // Handle images update - always delete old images first
-    updateData.images = {
-      deleteMany: {},
-      create: normalizedImages.map((url: string, index: number) => ({ url, position: index }))
+    if (normalizedImages.length) {
+      updateData.images = {
+        deleteMany: {},
+        create: normalizedImages.map((url: string, index: number) => ({ url, position: index }))
+      }
     }
 
     const product = await prisma.product.update({
@@ -91,7 +114,7 @@ export async function PUT(
       include: { images: true }
     })
 
-    return NextResponse.json(product)
+    return NextResponse.json(sanitizeProduct(product))
   } catch (error: any) {
     console.error('Error updating product:', error)
     return NextResponse.json({ 
