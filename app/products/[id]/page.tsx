@@ -106,6 +106,7 @@ export default function ProductPage() {
                   sizes="(max-width: 768px) 100vw, 50vw"
                   className="object-cover transition-all duration-500"
                   priority
+                  unoptimized={(images[activeIndex] || '').startsWith('/uploads/')}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent pointer-events-none"></div>
               </div>
@@ -123,7 +124,13 @@ export default function ProductPage() {
                           : 'border-gray-200 hover:border-gray-400'
                       }`}
                     >
-                      <Image src={url} alt="thumb" fill className="object-cover" />
+                      <Image 
+                        src={url} 
+                        alt="thumb" 
+                        fill 
+                        className="object-cover"
+                        unoptimized={url.startsWith('/uploads/')}
+                      />
                     </motion.button>
                   ))}
                 </div>

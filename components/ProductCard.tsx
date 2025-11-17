@@ -74,6 +74,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
                 className={`object-cover transition-opacity duration-300 ${isHovered ? 'opacity-0' : 'opacity-100'}`}
                 priority={index < 4}
                 quality={95}
+                unoptimized={(product.images[0]?.url || product.image || '').startsWith('/uploads/')}
               />
               <Image
                 src={product.images[1]?.url || product.image || '/placeholder-jewelry.jpg'}
@@ -83,6 +84,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
                 className={`object-cover transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
                 priority={index < 4}
                 quality={95}
+                unoptimized={(product.images[1]?.url || product.image || '').startsWith('/uploads/')}
               />
             </>
           ) : (
@@ -94,6 +96,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
               quality={95}
               className="object-cover transition-transform duration-300 group-hover:scale-110"
               priority={index < 4}
+              unoptimized={(product.image || '').startsWith('/uploads/')}
             />
           )}
           
