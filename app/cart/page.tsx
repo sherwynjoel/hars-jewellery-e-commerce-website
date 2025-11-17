@@ -511,23 +511,23 @@ export default function CartPage() {
                       )}
                     </div>
                     <div className="relative">
-                      <input
+                    <input
                         className={`input-field ${pincodeValidation && pincodeValidation.isValid && checkCityStateMatch() ? 'border-green-500' : pincodeValidation && !checkCityStateMatch() ? 'border-red-500' : ''}`}
-                        placeholder="City"
-                        value={customer.city}
-                        onChange={(e) => setCustomer({ ...customer, city: e.target.value })}
+                      placeholder="City"
+                      value={customer.city}
+                      onChange={(e) => setCustomer({ ...customer, city: e.target.value })}
                         disabled={validatingPincode}
-                      />
+                    />
                       {pincodeValidation && pincodeValidation.isValid && !checkCityStateMatch() && (
                         <p className="text-xs text-red-600 mt-1">City doesn't match pincode</p>
                       )}
                     </div>
                     <div className="relative">
-                      <input
+                    <input
                         className={`input-field ${pincodeValidation && pincodeValidation.isValid && checkCityStateMatch() ? 'border-green-500' : pincodeValidation && !checkCityStateMatch() ? 'border-red-500' : ''}`}
-                        placeholder="State"
-                        value={customer.state}
-                        onChange={(e) => setCustomer({ ...customer, state: e.target.value })}
+                      placeholder="State"
+                      value={customer.state}
+                      onChange={(e) => setCustomer({ ...customer, state: e.target.value })}
                         disabled={validatingPincode}
                       />
                       {pincodeValidation && pincodeValidation.isValid && !checkCityStateMatch() && (

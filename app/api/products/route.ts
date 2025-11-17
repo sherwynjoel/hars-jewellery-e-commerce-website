@@ -14,6 +14,7 @@ export async function GET(request: NextRequest) {
     const sort = searchParams.get('sort')
 
     const where = {
+      inStock: true, // Only show in-stock products to customers
       ...(category && { category }),
       ...(search && {
         OR: [

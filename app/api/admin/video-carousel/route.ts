@@ -11,18 +11,18 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Try to access the model - if it doesn't exist, the catch will handle it
-    const items = await (prisma as any).videoCarouselItem?.findMany({
+    const items = await prisma.videoCarouselItem.findMany({
       orderBy: { position: 'asc' }
-    }) || []
+    })
     
     return NextResponse.json(Array.isArray(items) ? items : [])
   } catch (error: any) {
     console.error('Error fetching video carousel items:', error)
-    // Return empty array if model doesn't exist yet
-    if (error.message?.includes('videoCarouselItem') || error.message?.includes('Unknown arg')) {
-      return NextResponse.json([])
-    }
+    console.error('Error details:', {
+      message: error?.message,
+      code: error?.code,
+      meta: error?.meta
+    })
     return NextResponse.json({ error: 'Failed to fetch video carousel items' }, { status: 500 })
   }
 }
@@ -42,15 +42,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'URL is required' }, { status: 400 })
     }
 
-    // Check if model exists
-    if (!(prisma as any).videoCarouselItem) {
-      return NextResponse.json({ 
-        error: 'VideoCarouselItem model not available. Please restart the server after running: npx prisma generate',
-        details: 'Prisma client needs to be regenerated'
-      }, { status: 500 })
-    }
-
-    const item = await (prisma as any).videoCarouselItem.create({
+    const item = await prisma.videoCarouselItem.create({
       data: {
         url,
         title: title || null,
@@ -64,21 +56,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(item)
   } catch (error: any) {
     console.error('Error creating video carousel item:', error)
-    const errorMessage = error?.message || 'Unknown error'
-    const errorDetails = error?.meta || error?.code || ''
-    
-    // Check for common Prisma errors
-    if (errorMessage.includes('videoCarouselItem') || errorMessage.includes('Unknown arg')) {
-      return NextResponse.json({ 
-        error: 'Database model not found. Please restart the server after running: npx prisma generate',
-        details: errorMessage
-      }, { status: 500 })
-    }
-    
+    console.error('Error details:', {
+      message: error?.message,
+      code: error?.code,
+      meta: error?.meta
+    })
     return NextResponse.json({ 
       error: 'Failed to create video carousel item',
-      details: errorMessage,
-      code: errorDetails
+      details: error?.message || 'Unknown error'
     }, { status: 500 })
   }
 }
@@ -105,7 +90,7 @@ export async function PATCH(request: NextRequest) {
     if (isActive !== undefined) updateData.isActive = isActive
     if (type !== undefined) updateData.type = type
 
-    const item = await (prisma as any).videoCarouselItem.update({
+    const item = await prisma.videoCarouselItem.update({
       where: { id },
       data: updateData
     })
@@ -132,7 +117,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'ID is required' }, { status: 400 })
     }
 
-    await (prisma as any).videoCarouselItem.delete({
+    await prisma.videoCarouselItem.delete({
       where: { id }
     })
 

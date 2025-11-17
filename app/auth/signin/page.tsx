@@ -124,8 +124,8 @@ export default function SignInPage() {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="block text-sm font-medium text-gray-700">
-                  Password
-                </label>
+                Password
+              </label>
                 <Link
                   href="/auth/forgot-password"
                   className="text-sm text-gray-600 hover:text-gray-900 transition-colors"

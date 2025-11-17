@@ -28,15 +28,27 @@ export default function ProductGrid({ limit, category, sort }: ProductGridProps)
   useEffect(() => {
     const fetchProducts = async () => {
       try {
+        setLoading(true)
         const params = new URLSearchParams()
         if (category) params.set('category', category)
         if (limit) params.set('limit', String(limit))
         if (sort) params.set('sort', sort)
-        const response = await fetch(`/api/products?${params.toString()}`)
+        // Add cache-busting to ensure fresh data
+        params.set('_t', String(Date.now()))
+        const response = await fetch(`/api/products?${params.toString()}`, {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache'
+          }
+        })
+        if (!response.ok) {
+          throw new Error('Failed to fetch products')
+        }
         const data = await response.json()
-        setProducts(data)
+        setProducts(Array.isArray(data) ? data : [])
       } catch (error) {
         console.error('Error fetching products:', error)
+        setProducts([])
       } finally {
         setLoading(false)
       }

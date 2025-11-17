@@ -3,7 +3,7 @@ module.exports = {
     name: 'hars-jewellery',
     script: 'npm',
     args: 'start',
-    cwd: '/public_html',
+    cwd: '/var/www/hars-jewellery',
     instances: 1,
     autorestart: true,
     watch: false,

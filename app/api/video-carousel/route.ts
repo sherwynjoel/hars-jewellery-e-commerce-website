@@ -4,18 +4,25 @@ import { prisma } from '@/lib/prisma'
 // GET active video carousel items for public display
 export async function GET() {
   try {
-    // Try to access the model - if it doesn't exist, the catch will handle it
-    const items = await (prisma as any).videoCarouselItem?.findMany({
+    const items = await prisma.videoCarouselItem.findMany({
       where: { 
         isActive: true
       },
       orderBy: { position: 'asc' }
-    }) || []
+    })
+    
+    // Log for debugging
+    console.log(`[Video Carousel API] Found ${items.length} active items`)
     
     return NextResponse.json(Array.isArray(items) ? items : [])
   } catch (error: any) {
-    // Silently return empty array - don't log errors for public endpoint
-    // This prevents page crashes if Prisma model isn't available yet
+    // Always log errors to help diagnose issues
+    console.error('[Video Carousel API] Error fetching items:', error)
+    console.error('[Video Carousel API] Error details:', {
+      message: error?.message,
+      code: error?.code,
+      meta: error?.meta
+    })
     return NextResponse.json([])
   }
 }
