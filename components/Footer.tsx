@@ -9,10 +9,9 @@ export default function Footer() {
   const currentYear = new Date().getFullYear()
 
   const socialLinks = [
-    { name: 'Facebook', icon: Facebook, href: '#' },
-    { name: 'Twitter', icon: Twitter, href: '#' },
-    { name: 'Instagram', icon: Instagram, href: '#' },
-    { name: 'YouTube', icon: Youtube, href: '#' }
+    { name: 'Facebook', icon: Facebook, href: 'https://www.facebook.com/share/1A1ZKbKNQm/?mibextid=wwXIfr' },
+    { name: 'Instagram', icon: Instagram, href: 'https://www.instagram.com/harsjewellery2011?igsh=MWxhaTEwY2M4YXEwaw==' },
+    { name: 'YouTube', icon: Youtube, href: 'https://www.youtube.com/channel/UCJyC6XsurT9Ux4bZ1UUyIrQ' }
   ]
 
   return (
