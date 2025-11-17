@@ -191,10 +191,22 @@ export default function AdminOrdersPage() {
                           )}
                         </button>
                       </div>
-                      {order.addressVerified && order.addressVerifiedAt && (
-                        <div className="mb-2 text-xs text-green-700 flex items-center gap-1">
-                          <Shield className="w-3 h-3" />
-                          Verified on {new Date(order.addressVerifiedAt).toLocaleString()}
+                      {order.addressVerified && (
+                        <div className="mb-2 text-xs text-green-700 flex flex-col gap-1">
+                          {order.addressVerifiedAt && (
+                            <div className="flex items-center gap-1">
+                              <Shield className="w-3 h-3" />
+                              Verified on {new Date(order.addressVerifiedAt).toLocaleString()}
+                            </div>
+                          )}
+                          {order.addressVerificationMethod && (
+                            <div className="flex items-center gap-1">
+                              <Shield className="w-3 h-3" />
+                              {order.addressVerificationMethod === 'AUTO_PINCODE'
+                                ? 'Automatically verified via pincode lookup'
+                                : `Method: ${order.addressVerificationMethod}`}
+                            </div>
+                          )}
                         </div>
                       )}
                       <div className="text-sm text-gray-700 space-y-1.5">

@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     console.log('Order API: Request body:', { itemsCount: body.items?.length, total: body.total })
     console.log('Order API: Items details:', body.items)
 
-    const { items, total, customer } = body
+    const { items, total, customer, addressVerification } = body
 
     if (!items || items.length === 0) {
       console.log('Order API: No items provided')
@@ -53,6 +53,9 @@ export async function POST(request: NextRequest) {
       price: item.price
     })))
     
+    const autoVerified = Boolean(addressVerification?.verified)
+    const verificationMethod = addressVerification?.method || 'AUTO_PINCODE'
+
     const order = await prisma.order.create({
       data: {
         userId: session.user.id,
@@ -65,6 +68,9 @@ export async function POST(request: NextRequest) {
         city: customer?.city ?? '',
         state: customer?.state ?? '',
         postalCode: customer?.postalCode ?? '',
+        addressVerified: autoVerified,
+        addressVerifiedAt: autoVerified ? new Date() : undefined,
+        addressVerificationMethod: autoVerified ? verificationMethod : null,
         items: {
           create: items.map((item: any) => ({
             productId: item.productId,

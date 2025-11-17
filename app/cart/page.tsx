@@ -213,6 +213,8 @@ export default function CartPage() {
       })
       console.log('Cart: Items being sent to order API:', items)
 
+      const autoVerified = Boolean(pincodeValidation?.isValid && checkCityStateMatch())
+
       // Create order
       const response = await fetch('/api/orders', {
         method: 'POST',
@@ -226,7 +228,11 @@ export default function CartPage() {
             price: item.price
           })),
           total: getTotalWithTax(),
-          customer: customer
+          customer: customer,
+          addressVerification: {
+            verified: autoVerified,
+            method: autoVerified ? 'AUTO_PINCODE' : null
+          }
         })
       })
 
