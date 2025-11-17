@@ -1,5 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { sendVerificationEmail } from '@/lib/email'
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const email = body?.email?.toLowerCase()?.trim()
+
+    if (!email) {
+      return NextResponse.json({ error: 'Email is required' }, { status: 400 })
+    }
+
+    const user = await prisma.user.findUnique({ where: { email } })
+    if (!user) {
+      return NextResponse.json({ error: 'No account found with this email.' }, { status: 404 })
+    }
+
+    if (user.emailVerifiedAt) {
+      return NextResponse.json({ message: 'Email is already verified. You can sign in directly.' })
+    }
+
+    await sendVerificationEmail(user)
+
+    return NextResponse.json({ message: 'Verification email sent. Please check your inbox.' })
+  } catch (error) {
+    console.error('Resend verification error:', error)
+    return NextResponse.json({ error: 'Failed to send verification email.' }, { status: 500 })
+  }
+}
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
 import { sendEmail } from '@/lib/mailer'
 import bcrypt from 'bcryptjs'
 import crypto from 'crypto'

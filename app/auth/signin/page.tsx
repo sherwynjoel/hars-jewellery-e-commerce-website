@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Eye, EyeOff, Mail, Lock } from 'lucide-react'
+import { Eye, EyeOff, Mail, Lock, Send } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import toast from 'react-hot-toast'
@@ -14,6 +14,7 @@ export default function SignInPage() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [resending, setResending] = useState(false)
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -59,6 +60,35 @@ export default function SignInPage() {
       toast.error('Something went wrong. Please try again.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleResendVerification = async () => {
+    const normalizedEmail = email.trim().toLowerCase()
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(normalizedEmail)) {
+      toast.error('Enter a valid email to resend verification.')
+      return
+    }
+
+    try {
+      setResending(true)
+      const response = await fetch('/api/auth/resend-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: normalizedEmail })
+      })
+      const data = await response.json()
+      if (response.ok) {
+        toast.success(data.message || 'Verification email sent. Please check your inbox.')
+      } else {
+        toast.error(data.error || 'Could not resend verification email.')
+      }
+    } catch (error) {
+      console.error('Resend verification error:', error)
+      toast.error('Something went wrong. Please try again later.')
+    } finally {
+      setResending(false)
     }
   }
 
@@ -159,6 +189,15 @@ export default function SignInPage() {
               className="w-full btn-primary py-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Signing In...' : 'Sign In'}
+            </button>
+            <button
+              type="button"
+              onClick={handleResendVerification}
+              disabled={resending}
+              className="w-full btn-secondary py-3 text-sm gap-2 flex items-center justify-center disabled:opacity-50"
+            >
+              <Send className="w-4 h-4" />
+              {resending ? 'Sending...' : 'Resend verification email'}
             </button>
           </form>
 
