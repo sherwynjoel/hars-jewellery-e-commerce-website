@@ -1,18 +1,54 @@
 'use client'
 
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Crown, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Youtube } from 'lucide-react'
+import { Mail, Phone, MapPin, Facebook, Instagram, Youtube } from 'lucide-react'
 
 export default function Footer() {
   const currentYear = new Date().getFullYear()
+  const [phone, setPhone] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
 
   const socialLinks = [
     { name: 'Facebook', icon: Facebook, href: 'https://www.facebook.com/share/1A1ZKbKNQm/?mibextid=wwXIfr' },
     { name: 'Instagram', icon: Instagram, href: 'https://www.instagram.com/hars.jewellery?igsh=Y3Fva2R3NGZzd25o' },
     { name: 'YouTube', icon: Youtube, href: 'https://www.youtube.com/channel/UCJyC6XsurT9Ux4bZ1UUyIrQ' }
   ]
+
+  const handleSubscribe = async (event: React.FormEvent) => {
+    event.preventDefault()
+    const digits = phone.replace(/\D/g, '')
+
+    if (digits.length !== 10) {
+      setStatus({ type: 'error', message: 'Please enter a valid 10-digit phone number.' })
+      return
+    }
+
+    try {
+      setSubmitting(true)
+      setStatus(null)
+      const response = await fetch('/api/subscribers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: digits })
+      })
+      const data = await response.json()
+      if (response.ok) {
+        setStatus({ type: 'success', message: data.message || 'Thank you! We will reach out soon.' })
+        setPhone('')
+      } else {
+        setStatus({ type: 'error', message: data.error || 'Failed to save phone number.' })
+      }
+    } catch (error) {
+      console.error('Subscription error:', error)
+      setStatus({ type: 'error', message: 'Something went wrong. Please try again later.' })
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   return (
     <footer className="bg-gray-900 text-white">
@@ -64,18 +100,35 @@ export default function Footer() {
             <div>
               <h3 className="text-xl font-semibold mb-2">Stay Updated</h3>
               <p className="text-gray-300 mb-6">
-                Subscribe to our newsletter for exclusive offers and new collection updates.
+                Share your phone number and we&apos;ll send exclusive offers and collection updates.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4">
+              <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-4">
                 <input
-                  type="email"
-                  placeholder="Enter your email"
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength={14}
+                  placeholder="Enter your 10-digit number"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
                   className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent text-white placeholder-gray-400"
                 />
-                <button className="btn-primary whitespace-nowrap">
-                  Subscribe
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="btn-primary whitespace-nowrap disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {submitting ? 'Saving...' : 'Notify Me'}
                 </button>
-              </div>
+              </form>
+              {status && (
+                <p
+                  className={`mt-3 text-sm ${
+                    status.type === 'success' ? 'text-green-400' : 'text-red-400'
+                  }`}
+                >
+                  {status.message}
+                </p>
+              )}
             </div>
           </motion.div>
         </div>

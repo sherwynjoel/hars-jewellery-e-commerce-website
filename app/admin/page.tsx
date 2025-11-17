@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Plus, Edit, Trash2, Eye, Crown, Package, Users, DollarSign, Loader2, Power, PowerOff, Database } from 'lucide-react'
+import { Plus, Edit, Trash2, Eye, Crown, Package, Users, DollarSign, Loader2, Power, PowerOff, Database, Phone } from 'lucide-react'
 import Navigation from '@/components/Navigation'
 import ProductForm from '@/components/ProductForm'
 import DeployButton from '@/components/DeployButton'
@@ -25,6 +25,12 @@ interface Product {
   createdAt: string
 }
 
+interface Subscriber {
+  id: string
+  phone: string
+  createdAt: string
+}
+
 export default function AdminPanel() {
   const { data: session, status } = useSession()
   const router = useRouter()
@@ -38,6 +44,8 @@ export default function AdminPanel() {
   const [checkingVerification, setCheckingVerification] = useState(true)
   const [serviceStatus, setServiceStatus] = useState<{ isStopped: boolean; message: string } | null>(null)
   const [togglingService, setTogglingService] = useState(false)
+  const [subscribers, setSubscribers] = useState<Subscriber[]>([])
+  const [loadingSubscribers, setLoadingSubscribers] = useState(false)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -77,10 +85,28 @@ export default function AdminPanel() {
       setCheckingVerification(false)
       fetchProducts()
       fetchServiceStatus()
+      fetchSubscribers()
     } catch (error) {
       console.error('Error checking verification:', error)
       // If check fails, redirect to verification page
       router.push('/admin/verify-access')
+    }
+  }
+
+  const fetchSubscribers = async () => {
+    try {
+      setLoadingSubscribers(true)
+      const response = await fetch('/api/subscribers')
+      if (response.ok) {
+        const data = await response.json()
+        if (Array.isArray(data)) {
+          setSubscribers(data)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch subscriber numbers:', error)
+    } finally {
+      setLoadingSubscribers(false)
     }
   }
 
@@ -217,6 +243,9 @@ export default function AdminPanel() {
     fetchProducts()
     handleFormClose()
   }
+
+  const formatPhoneNumber = (value: string) =>
+    value.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3')
 
   if (status === 'loading') {
     return (
@@ -519,6 +548,53 @@ export default function AdminPanel() {
                 </div>
               </button>
             </div>
+          </motion.div>
+
+          {/* Interested Customers */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm mb-8"
+          >
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <Phone className="w-5 h-5 text-gray-700" />
+                  Interested Customers
+                </h3>
+                <p className="text-sm text-gray-500">
+                  Phone numbers collected from the homepage subscription form
+                </p>
+              </div>
+              <button
+                onClick={fetchSubscribers}
+                disabled={loadingSubscribers}
+                className="text-sm font-medium px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loadingSubscribers ? 'Refreshing...' : 'Refresh'}
+              </button>
+            </div>
+
+            {subscribers.length === 0 ? (
+              <p className="text-sm text-gray-500 mt-6">
+                No numbers saved yet. As soon as customers submit their phone numbers,
+                they&apos;ll appear here.
+              </p>
+            ) : (
+              <div className="mt-6 max-h-64 overflow-y-auto divide-y divide-gray-100">
+                {subscribers.map((subscriber) => (
+                  <div key={subscriber.id} className="py-3 flex items-center justify-between text-sm">
+                    <span className="font-semibold text-gray-900 font-mono tracking-wide">
+                      {formatPhoneNumber(subscriber.phone)}
+                    </span>
+                    <span className="text-gray-500 text-xs">
+                      {new Date(subscriber.createdAt).toLocaleString()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </motion.div>
 
           {/* Slideshow Management */}

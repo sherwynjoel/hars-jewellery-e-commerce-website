@@ -12,7 +12,7 @@ import { useCartStore } from '@/lib/store'
 import toast from 'react-hot-toast'
 
 export default function CartPage() {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const router = useRouter()
   const { items, updateQuantity, removeItem, clearCart, getTotalPrice, getTotalItems, getSubtotal, getShippingCost, getTaxAmount, getTotalWithTax } = useCartStore()
   const [loading, setLoading] = useState(false)
@@ -34,6 +34,14 @@ export default function CartPage() {
     state: '',
     postalCode: ''
   })
+
+  // Require authentication for cart access
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      toast.error('Please sign in to manage your cart')
+      router.push('/auth/signin?callbackUrl=/cart')
+    }
+  }, [status, router])
 
   // Load any saved address from localStorage on mount
   useEffect(() => {
@@ -246,6 +254,21 @@ export default function CartPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <Navigation />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-black" />
+        </div>
+      </div>
+    )
+  }
+
+  if (!session) {
+    return null
   }
 
   if (items.length === 0) {

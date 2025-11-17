@@ -126,6 +126,12 @@ model ProductImage {
   createdAt DateTime @default(now())
 }
 
+model Subscriber {
+  id        String   @id @default(cuid())
+  phone     String   @unique
+  createdAt DateTime @default(now())
+}
+
 enum Role {
   USER
   ADMIN
