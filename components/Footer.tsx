@@ -10,7 +10,7 @@ export default function Footer() {
 
   const socialLinks = [
     { name: 'Facebook', icon: Facebook, href: 'https://www.facebook.com/share/1A1ZKbKNQm/?mibextid=wwXIfr' },
-    { name: 'Instagram', icon: Instagram, href: 'https://www.instagram.com/harsjewellery2011?igsh=MWxhaTEwY2M4YXEwaw==' },
+    { name: 'Instagram', icon: Instagram, href: 'https://www.instagram.com/hars.jewellery?igsh=Y3Fva2R3NGZzd25o' },
     { name: 'YouTube', icon: Youtube, href: 'https://www.youtube.com/channel/UCJyC6XsurT9Ux4bZ1UUyIrQ' }
   ]
 
