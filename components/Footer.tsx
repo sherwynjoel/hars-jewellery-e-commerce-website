@@ -115,7 +115,7 @@ export default function Footer() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="btn-primary whitespace-nowrap disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="btn-primary whitespace-nowrap disabled:opacity-60 disabled:cursor-not-allowed px-6 min-w-[120px]"
                 >
                   {submitting ? 'Saving...' : 'Notify Me'}
                 </button>

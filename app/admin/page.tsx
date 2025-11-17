@@ -8,7 +8,6 @@ import { motion } from 'framer-motion'
 import { Plus, Edit, Trash2, Eye, Crown, Package, Users, DollarSign, Loader2, Power, PowerOff, Database, Phone } from 'lucide-react'
 import Navigation from '@/components/Navigation'
 import ProductForm from '@/components/ProductForm'
-import DeployButton from '@/components/DeployButton'
 import SlideshowManager from '@/components/SlideshowManager'
 import VideoCarouselManager from '@/components/VideoCarouselManager'
 import toast from 'react-hot-toast'
@@ -320,8 +319,6 @@ export default function AdminPanel() {
                   </span>
                   <span className="sm:hidden">DB</span>
                 </Link>
-
-                <DeployButton />
               </div>
             </div>
           </motion.div>
