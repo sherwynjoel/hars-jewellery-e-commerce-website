@@ -1,21 +1,23 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { signIn } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Eye, EyeOff, Mail, Lock, Send } from 'lucide-react'
+import { Eye, EyeOff, Mail, Lock, Send, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import toast from 'react-hot-toast'
 
-export default function SignInPage() {
+function SignInContent() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [resending, setResending] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const inactivityReason = searchParams?.get('reason') === 'inactivity'
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -101,6 +103,20 @@ export default function SignInPage() {
         className="w-full max-w-md"
       >
         <div className="text-center mb-8">
+          {inactivityReason && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 p-4 bg-yellow-50 border-2 border-yellow-400 rounded-lg"
+            >
+              <div className="flex items-center gap-2 justify-center text-yellow-800">
+                <AlertCircle className="w-5 h-5" />
+                <p className="text-sm font-semibold">
+                  You were automatically logged out due to 30 minutes of inactivity.
+                </p>
+              </div>
+            </motion.div>
+          )}
           <Link href="/" className="inline-flex items-center space-x-3 justify-center">
             <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden ring-2 ring-gray-200 bg-white flex-shrink-0 shadow-lg">
               <Image
@@ -212,6 +228,18 @@ export default function SignInPage() {
         </motion.div>
       </motion.div>
     </div>
+  )
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
+      </div>
+    }>
+      <SignInContent />
+    </Suspense>
   )
 }
 

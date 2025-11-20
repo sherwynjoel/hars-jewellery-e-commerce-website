@@ -9,6 +9,8 @@ import ProductGrid from '@/components/ProductGrid'
 import Footer from '@/components/Footer'
 import HeroSlideshow from '@/components/HeroSlideshow'
 import VideoCarousel from '@/components/VideoCarousel'
+import Testimonials from '@/components/Testimonials'
+import EditorialShowcase from '@/components/EditorialShowcase'
 import { useEffect, useState } from 'react'
 
 export default function HomePage() {
@@ -178,8 +180,14 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Editorial Showcase */}
+      <EditorialShowcase />
+
       {/* Video Carousel Section */}
       <VideoCarousel />
+
+      {/* Testimonials Section */}
+      <Testimonials />
 
       <Footer />
     </div>
