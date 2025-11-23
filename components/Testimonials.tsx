@@ -18,7 +18,8 @@ export default function Testimonials() {
   const sectionRef = useRef<HTMLDivElement | null>(null)
   const { scrollYProgress } = useScroll({
     target: sectionRef,
-    offset: ['start end', 'end start']
+    offset: ['start end', 'end start'],
+    layoutEffect: false
   })
   const slowTrack = useSpring(
     useTransform(scrollYProgress, [0, 1], ['8%', '-12%']),
@@ -47,15 +48,15 @@ export default function Testimonials() {
     fetchTestimonials()
   }, [])
 
-  if (!loading && testimonials.length === 0) {
-    return null
-  }
-
   const parallaxRows = useMemo(() => {
     const firstRow = testimonials.filter((_, index) => index % 2 === 0)
     const secondRow = testimonials.filter((_, index) => index % 2 === 1)
     return { firstRow, secondRow }
   }, [testimonials])
+
+  if (!loading && testimonials.length === 0) {
+    return null
+  }
 
   const Card = ({
     testimonial,
@@ -107,7 +108,7 @@ export default function Testimonials() {
   )
 
   return (
-    <section className="pt-12 pb-20 bg-gradient-to-b from-gray-50 via-white to-gray-100">
+    <section ref={sectionRef} className="pt-12 pb-20 bg-gradient-to-b from-gray-50 via-white to-gray-100">
       <div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div

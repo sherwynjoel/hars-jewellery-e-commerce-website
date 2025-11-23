@@ -4,7 +4,8 @@
 echo "🚀 Starting deployment process..."
 
 # Navigate to project directory
-cd /public_html
+# Update this path to match your VPS setup
+cd /var/www/hars-jewellery
 
 # Pull latest changes
 echo "📥 Pulling latest changes..."
