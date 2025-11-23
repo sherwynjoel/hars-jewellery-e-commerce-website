@@ -15,7 +15,10 @@ import { useEffect, useState } from 'react'
 
 export default function HomePage() {
   const [goldPrice, setGoldPrice] = useState<number | null>(null)
+  const [mounted, setMounted] = useState(false)
+
   useEffect(() => {
+    setMounted(true)
     fetch('/api/gold-price').then(async (r) => {
       const d = await r.json()
       setGoldPrice(d?.pricePerGram ?? null)
@@ -28,7 +31,7 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className="pt-28 sm:pt-32 pb-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-50 via-white to-gray-100/20">
         <div className="max-w-7xl mx-auto">
-          {goldPrice != null && (
+          {mounted && goldPrice != null && (
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
