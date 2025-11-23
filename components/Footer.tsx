@@ -1,16 +1,20 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Mail, Phone, MapPin, Facebook, Instagram, Youtube } from 'lucide-react'
 
 export default function Footer() {
-  const currentYear = new Date().getFullYear()
+  const [currentYear, setCurrentYear] = useState<number | null>(null)
   const [phone, setPhone] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+
+  useEffect(() => {
+    setCurrentYear(new Date().getFullYear())
+  }, [])
 
   const socialLinks = [
     { name: 'Facebook', icon: Facebook, href: 'https://www.facebook.com/share/1A1ZKbKNQm/?mibextid=wwXIfr' },
@@ -159,7 +163,7 @@ export default function Footer() {
         >
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-400 text-sm">
-              © {currentYear} Hars Jewellery. All rights reserved.
+              © {currentYear || new Date().getFullYear()} Hars Jewellery. All rights reserved.
             </p>
             
             <div className="flex items-center space-x-6 mt-4 md:mt-0">
