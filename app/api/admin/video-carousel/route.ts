@@ -2,6 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { revalidatePath } from 'next/cache'
+
+const revalidateHomepage = () => {
+  try {
+    revalidatePath('/')
+    revalidatePath('/collections')
+  } catch (error) {
+    console.error('[Video Carousel Admin] Failed to revalidate paths:', error)
+  }
+}
 
 // GET all video carousel items
 export async function GET() {
@@ -53,6 +63,7 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    revalidateHomepage()
     return NextResponse.json(item)
   } catch (error: any) {
     console.error('Error creating video carousel item:', error)
@@ -95,6 +106,7 @@ export async function PATCH(request: NextRequest) {
       data: updateData
     })
 
+    revalidateHomepage()
     return NextResponse.json(item)
   } catch (error) {
     console.error('Error updating video carousel item:', error)
@@ -121,6 +133,7 @@ export async function DELETE(request: NextRequest) {
       where: { id }
     })
 
+    revalidateHomepage()
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error deleting video carousel item:', error)

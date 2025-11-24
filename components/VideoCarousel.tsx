@@ -31,7 +31,7 @@ export default function VideoCarousel() {
 
   const fetchVideos = async () => {
     try {
-      const response = await fetch('/api/video-carousel')
+      const response = await fetch('/api/video-carousel', { cache: 'no-store' })
       if (!response.ok) throw new Error('Failed to fetch')
       const data = await response.json()
       setItems(Array.isArray(data) ? data : [])

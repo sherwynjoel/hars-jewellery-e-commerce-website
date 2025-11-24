@@ -83,6 +83,7 @@ export default function HeroSlideshow() {
       const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
       
       const response = await fetch('/api/slideshow', {
+        cache: 'no-store',
         signal: controller.signal
       })
       

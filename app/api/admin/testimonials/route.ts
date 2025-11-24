@@ -2,6 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { revalidatePath } from 'next/cache'
+
+const revalidateHomepage = () => {
+  try {
+    revalidatePath('/')
+    revalidatePath('/collections')
+  } catch (error) {
+    console.error('[Testimonials Admin] Failed to revalidate paths:', error)
+  }
+}
 
 export async function GET() {
   try {
@@ -45,6 +55,7 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    revalidateHomepage()
     return NextResponse.json(testimonial)
   } catch (error) {
     console.error('Error creating testimonial:', error)
@@ -79,6 +90,7 @@ export async function PATCH(request: NextRequest) {
       data
     })
 
+    revalidateHomepage()
     return NextResponse.json(testimonial)
   } catch (error) {
     console.error('Error updating testimonial:', error)
@@ -102,6 +114,7 @@ export async function DELETE(request: NextRequest) {
 
     await prisma.testimonial.delete({ where: { id } })
 
+    revalidateHomepage()
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error deleting testimonial:', error)

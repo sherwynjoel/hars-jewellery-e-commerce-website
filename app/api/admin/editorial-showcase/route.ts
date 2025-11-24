@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { revalidatePath } from 'next/cache'
 
 async function ensureAdmin() {
   const session = await getServerSession(authOptions)
@@ -9,6 +10,15 @@ async function ensureAdmin() {
     return null
   }
   return session
+}
+
+const revalidateHomepage = () => {
+  try {
+    revalidatePath('/')
+    revalidatePath('/collections')
+  } catch (error) {
+    console.error('[Editorial Showcase Admin] Failed to revalidate paths:', error)
+  }
 }
 
 export async function GET() {
@@ -61,6 +71,7 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    revalidateHomepage()
     return NextResponse.json(feature)
   } catch (error) {
     console.error('Error creating editorial feature:', error)
@@ -97,6 +108,7 @@ export async function PATCH(request: NextRequest) {
       data
     })
 
+    revalidateHomepage()
     return NextResponse.json(updated)
   } catch (error) {
     console.error('Error updating editorial feature:', error)
@@ -119,6 +131,7 @@ export async function DELETE(request: NextRequest) {
 
     await prisma.editorialFeature.delete({ where: { id } })
 
+    revalidateHomepage()
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error deleting editorial feature:', error)

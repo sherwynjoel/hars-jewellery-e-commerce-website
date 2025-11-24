@@ -2,6 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { revalidatePath } from 'next/cache'
+
+const revalidateHomepage = () => {
+  try {
+    revalidatePath('/')
+    revalidatePath('/collections')
+  } catch (error) {
+    console.error('[Slideshow Admin] Failed to revalidate paths:', error)
+  }
+}
 
 // GET all slideshow images
 export async function GET() {
@@ -42,6 +52,7 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    revalidateHomepage()
     return NextResponse.json(image)
   } catch (error) {
     console.error('Error creating slideshow image:', error)
@@ -76,6 +87,7 @@ export async function PATCH(request: NextRequest) {
       data: updateData
     })
 
+    revalidateHomepage()
     return NextResponse.json(image)
   } catch (error) {
     console.error('Error updating slideshow image:', error)
@@ -102,6 +114,7 @@ export async function DELETE(request: NextRequest) {
       where: { id }
     })
 
+    revalidateHomepage()
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error deleting slideshow image:', error)
