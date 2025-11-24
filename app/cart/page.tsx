@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
@@ -8,13 +8,57 @@ import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import Navigation from '@/components/Navigation'
 import RazorpayPaymentGateway from '@/components/RazorpayPaymentGateway'
-import { useCartStore } from '@/lib/store'
+import { useCartStore, CartItem } from '@/lib/store'
 import toast from 'react-hot-toast'
 
 export default function CartPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const { items, updateQuantity, removeItem, clearCart, getTotalPrice, getTotalItems, getSubtotal, getShippingCost, getTaxAmount, getTotalWithTax } = useCartStore()
+  const { items, updateQuantity, removeItem, clearCart, getTotalPrice, getTotalItems, getSubtotal, getShippingCost, getTaxAmount, getTotalWithTax, updateItemDetails } = useCartStore()
+  const cartItemIdsKey = useMemo(() => items.map(item => item.id).sort().join(','), [items])
+
+  useEffect(() => {
+    if (!items.length) return
+
+    let cancelled = false
+    const itemsSnapshot = [...items]
+
+    const syncCartWithLatestProducts = async () => {
+      await Promise.all(itemsSnapshot.map(async (item) => {
+        try {
+          const response = await fetch(`/api/products/${item.id}`, { cache: 'no-store' })
+          if (!response.ok) return
+          const product = await response.json()
+          const updates: Partial<CartItem> = {}
+          if (typeof product.price === 'number' && product.price !== item.price) {
+            updates.price = product.price
+          }
+          if (product.name && product.name !== item.name) {
+            updates.name = product.name
+          }
+          if (product.image && product.image !== item.image) {
+            updates.image = product.image
+          }
+          const newShipping = typeof product.shippingCost === 'number' ? product.shippingCost : 0
+          if ((item.shippingCost || 0) !== newShipping) {
+            updates.shippingCost = newShipping
+          }
+          if (!cancelled && Object.keys(updates).length > 0) {
+            updateItemDetails(item.id, updates)
+          }
+        } catch (error) {
+          console.error('Failed to sync cart item with latest product data:', error)
+        }
+      }))
+    }
+
+    syncCartWithLatestProducts()
+
+    return () => {
+      cancelled = true
+    }
+  }, [cartItemIdsKey, updateItemDetails])
+
   const [loading, setLoading] = useState(false)
   const [serviceStatus, setServiceStatus] = useState<{ isStopped: boolean; message: string } | null>(null)
   const [validatingPincode, setValidatingPincode] = useState(false)
