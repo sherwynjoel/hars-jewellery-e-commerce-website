@@ -17,6 +17,7 @@ interface OrderItem {
     id: string
     name: string
     image: string
+    shippingCost?: number | null
   }
 }
 
@@ -31,6 +32,14 @@ interface Order {
   trackingUrl?: string | null
   shippedAt?: string | null
   deliveredAt?: string | null
+  customerName?: string
+  email?: string
+  phone?: string
+  addressLine1?: string
+  addressLine2?: string | null
+  city?: string
+  state?: string
+  postalCode?: string
 }
 
 const COMPANY_INFO = {
@@ -40,7 +49,26 @@ const COMPANY_INFO = {
   state: 'Tamil Nadu (Code: 33)',
   contact: '+91 98765 43210',
   email: 'harsjewellery2005@gmail.com',
-  logo: '/hars-logo.jpg'
+}
+
+const formatCurrency = (value: number) =>
+  `₹${value.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+
+const buildInvoiceSummary = (order: Order) => {
+  const subtotal = order.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const shippingCost = order.items.reduce(
+    (sum, item) => sum + ((item.product?.shippingCost || 0) * item.quantity),
+    0
+  )
+  const tax = Math.round(subtotal * 0.03 * 100) / 100
+  const makingCost = Math.max(0, Math.round((order.total - (subtotal + shippingCost + tax)) * 100) / 100)
+  return {
+    subtotal,
+    shippingCost,
+    tax,
+    makingCost,
+    total: order.total
+  }
 }
 
 export default function OrdersPage() {
@@ -242,78 +270,147 @@ export default function OrdersPage() {
 
                       {/* Invoice */}
                       {openInvoiceId === order.id && (
-                        <div className="p-4 bg-white rounded-lg border border-gray-200">
-                          <div className="flex items-center justify-between mb-3">
-                            <h4 className="text-sm font-semibold text-gray-800">Invoice</h4>
-                            <button
-                              onClick={() => {
-                                const printContents = document.getElementById(`invoice-${order.id}`)?.innerHTML || ''
-                                const win = window.open('', '', 'width=800,height=900')
-                                if (!win) return
-                                const baseUrl = window.location.origin
-                                const adjustedContents = printContents.replace(/src="\/(?!\/)/g, `src="${baseUrl}/`)
-                                win.document.open()
-                                win.document.write(`<!DOCTYPE html><html><head><title>Invoice</title><style>
-                                  body{font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;padding:24px;color:#111827}
-                                  h2{font-size:20px;margin:0 0 8px}
-                                  .muted{color:#6B7280}
-                                  table{width:100%;border-collapse:collapse;margin-top:12px}
-                                  th,td{font-size:14px;text-align:left;padding:8px;border-bottom:1px solid #E5E7EB}
-                                  .right{text-align:right}
-                                </style></head><body>${adjustedContents}</body></html>`)
-                                win.document.close()
-                                win.focus()
-                                win.print()
-                              }}
-                              className="inline-flex items-center gap-2 text-sm text-black hover:text-gray-700"
-                            >
-                              <Download className="w-4 h-4" /> Download PDF
-                            </button>
-                          </div>
-                          <div id={`invoice-${order.id}`}>
-                            <div className="mb-4">
-                              <h2 className="text-base font-semibold text-dark-900">{COMPANY_INFO.name}</h2>
-                              <div className="text-xs text-gray-600 leading-snug">
+                        <div className="p-6 bg-white rounded-2xl border border-gray-200 shadow-lg">
+                          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-6">
+                            <div>
+                              <p className="text-xs uppercase tracking-[0.5em] text-gray-400">Invoice</p>
+                              <h2 className="text-3xl font-serif font-bold text-dark-900">Hars Jewellery</h2>
+                              <div className="mt-2 text-sm text-gray-600 leading-relaxed">
                                 <div>{COMPANY_INFO.address}</div>
                                 <div>GSTIN/UIN: {COMPANY_INFO.gst}</div>
-                                <div>State: {COMPANY_INFO.state}</div>
-                                <div>Contact: {COMPANY_INFO.contact}</div>
-                                <div>Email: {COMPANY_INFO.email}</div>
+                                <div>{COMPANY_INFO.state}</div>
+                                <div>{COMPANY_INFO.contact}</div>
+                                <div>{COMPANY_INFO.email}</div>
                               </div>
                             </div>
-                            <div className="text-xs text-gray-600 mb-3">
-                              <div>Invoice for Order #{order.id.slice(-8).toUpperCase()}</div>
-                              <div>Date: {new Date(order.createdAt).toLocaleString('en-IN')}</div>
+                            <div className="text-sm text-gray-600 space-y-2 md:text-right">
+                              <div>
+                                <span className="font-semibold text-gray-900 mr-2">Invoice ID:</span>
+                                #{order.id.slice(-8).toUpperCase()}
+                              </div>
+                              <div>
+                                <span className="font-semibold text-gray-900 mr-2">Date:</span>
+                                {new Date(order.createdAt).toLocaleString('en-IN')}
+                              </div>
+                              <button
+                                onClick={() => {
+                                  const printContents = document.getElementById(`invoice-${order.id}`)?.innerHTML || ''
+                                  const win = window.open('', '', 'width=900,height=900')
+                                  if (!win) return
+                                  const baseUrl = window.location.origin
+                                  const adjustedContents = printContents.replace(/src="\/(?!\/)/g, `src="${baseUrl}/`)
+                                  win.document.open()
+                                  win.document.write(`<!DOCTYPE html><html><head><title>Invoice</title><style>
+                                    body{font-family:'Inter',ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;padding:48px;color:#0f172a;background:#fff}
+                                    h1,h2,h3,h4{margin:0}
+                                    .invoice-card{max-width:720px;margin:0 auto;border:1px solid #e2e8f0;border-radius:24px;padding:40px}
+                                    .grid{display:flex;justify-content:space-between;gap:32px;margin-top:32px}
+                                    table{width:100%;border-collapse:collapse;margin-top:32px;font-size:14px}
+                                    th{background:#111827;color:#fff;text-transform:uppercase;font-size:12px;letter-spacing:0.2em;padding:12px;text-align:left}
+                                    td{padding:12px;border-bottom:1px solid #e2e8f0}
+                                    .summary{margin-top:32px;display:flex;justify-content:space-between;gap:24px;font-size:14px}
+                                    .summary-right div{display:flex;justify-content:space-between;margin-bottom:8px}
+                                    .total{background:#111827;color:#fff;border-radius:12px;padding:12px 16px;font-weight:bold}
+                                    .footer{margin-top:48px;font-size:13px;display:flex;justify-content:space-between;align-items:center}
+                                  </style></head><body><div class="invoice-card">${adjustedContents}</div></body></html>`)
+                                  win.document.close()
+                                  win.focus()
+                                  win.print()
+                                }}
+                                className="inline-flex items-center gap-2 text-sm text-black hover:text-gray-700"
+                              >
+                                <Download className="w-4 h-4" /> Download PDF
+                              </button>
                             </div>
-                            <table>
-                              <thead>
-                                <tr>
-                                  <th>Item</th>
-                                  <th className="right">Qty</th>
-                                  <th className="right">Price</th>
-                                  <th className="right">Amount</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {order.items.map((item) => (
-                                  <tr key={`inv-${item.id}`}>
-                                    <td>{item.product.name}</td>
-                                    <td className="right">{item.quantity}</td>
-                                    <td className="right">₹{item.price.toLocaleString('en-IN')}</td>
-                                    <td className="right">₹{(item.price * item.quantity).toLocaleString('en-IN')}</td>
+                          </div>
+                          <div
+                            id={`invoice-${order.id}`}
+                            className="space-y-6"
+                          >
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                              <div>
+                                <p className="text-xs uppercase tracking-[0.3em] text-gray-400">Invoice To</p>
+                                <p className="text-lg font-semibold text-dark-900 mt-2">{order.customerName || 'Customer'}</p>
+                                <p className="text-gray-600">{order.phone || ''}</p>
+                                <p className="text-gray-500">{order.addressLine1}</p>
+                                {order.addressLine2 && <p className="text-gray-500">{order.addressLine2}</p>}
+                                <p className="text-gray-500">
+                                  {[order.city, order.state, order.postalCode].filter(Boolean).join(', ')}
+                                </p>
+                              </div>
+                              <div className="text-sm text-gray-600 md:text-right">
+                                <p className="text-xs uppercase tracking-[0.3em] text-gray-400">Billed By</p>
+                                <p className="text-lg font-semibold text-dark-900 mt-2">Hars Jewellery</p>
+                                <p>{COMPANY_INFO.email}</p>
+                                <p>{COMPANY_INFO.contact}</p>
+                                <p>Coimbatore, Tamil Nadu</p>
+                              </div>
+                            </div>
+                            <div className="overflow-hidden rounded-2xl border border-gray-200">
+                              <table className="min-w-full text-sm">
+                                <thead>
+                                  <tr className="bg-black text-white">
+                                    <th className="px-4 py-3 text-left text-xs font-semibold tracking-[0.35em] uppercase">Product</th>
+                                    <th className="px-4 py-3 text-right text-xs font-semibold tracking-[0.35em] uppercase">Price</th>
+                                    <th className="px-4 py-3 text-right text-xs font-semibold tracking-[0.35em] uppercase">Qty</th>
+                                    <th className="px-4 py-3 text-right text-xs font-semibold tracking-[0.35em] uppercase">Total</th>
                                   </tr>
-                                ))}
-                              </tbody>
-                              <tfoot>
-                                <tr>
-                                  <td colSpan={3} className="right"><strong>Total</strong></td>
-                                  <td className="right"><strong>₹{order.total.toLocaleString('en-IN')}</strong></td>
-                                </tr>
-                                <tr>
-                                  <td colSpan={4} className="muted">Thank you for your purchase!</td>
-                                </tr>
-                              </tfoot>
-                            </table>
+                                </thead>
+                                <tbody>
+                                  {order.items.map((item) => (
+                                    <tr key={`inv-${item.id}`} className="border-b border-gray-200">
+                                      <td className="px-4 py-3 text-gray-800">{item.product.name}</td>
+                                      <td className="px-4 py-3 text-right text-gray-600">{formatCurrency(item.price)}</td>
+                                      <td className="px-4 py-3 text-right text-gray-600">{item.quantity}</td>
+                                      <td className="px-4 py-3 text-right font-semibold text-gray-900">
+                                        {formatCurrency(item.price * item.quantity)}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                            {(() => {
+                              const summary = buildInvoiceSummary(order)
+                              return (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                                  <div className="space-y-2 text-gray-600">
+                                    <p className="text-xs uppercase tracking-[0.3em] text-gray-400">Payment Method</p>
+                                    <p>Online Payment</p>
+                                    <p>Invoice ID: #{order.id.slice(-8).toUpperCase()}</p>
+                                    <p>Date: {new Date(order.createdAt).toLocaleString('en-IN')}</p>
+                                  </div>
+                                  <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200 space-y-2">
+                                    <div className="flex justify-between">
+                                      <span>Sub-total</span>
+                                      <span>{formatCurrency(summary.subtotal)}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span>Making Cost</span>
+                                      <span>{formatCurrency(summary.makingCost)}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span>Shipping Cost</span>
+                                      <span>{formatCurrency(summary.shippingCost)}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span>Tax (3%)</span>
+                                      <span>{formatCurrency(summary.tax)}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-200">
+                                      <span className="text-lg font-semibold text-gray-900">Total</span>
+                                      <span className="text-lg font-bold text-gray-900">
+                                        {formatCurrency(summary.total)}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              )
+                            })()}
+                            <div className="flex flex-col sm:flex-row justify-between items-center text-sm text-gray-500 mt-6 pt-6 border-t border-gray-200">
+                              <p>Thank you for your purchase!</p>
+                              <p className="font-semibold text-gray-700">Hars Jewellery</p>
+                            </div>
                           </div>
                         </div>
                       )}
