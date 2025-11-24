@@ -22,10 +22,10 @@ interface EditorialFeature {
 }
 
 const layoutClassMap: Record<string, string> = {
-  square: 'md:col-span-1 md:row-span-1',
-  wide: 'md:col-span-2 md:row-span-1',
-  tall: 'md:col-span-1 md:row-span-2',
-  hero: 'md:col-span-2 md:row-span-2'
+  square: 'col-span-1 row-span-1 md:col-span-1 md:row-span-1',
+  wide: 'col-span-2 row-span-1 md:col-span-2 md:row-span-1',
+  tall: 'col-span-1 row-span-2 md:col-span-1 md:row-span-2',
+  hero: 'col-span-2 row-span-2 md:col-span-2 md:row-span-2'
 }
 
 export default function EditorialShowcase() {
@@ -77,7 +77,7 @@ export default function EditorialShowcase() {
         </motion.div>
 
         {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 auto-rows-[180px] md:auto-rows-[220px]">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 auto-rows-[140px] sm:auto-rows-[180px] md:auto-rows-[220px]">
             {Array.from({ length: 8 }).map((_, idx) => (
               <div key={idx} className="rounded-[28px] bg-gray-100 animate-pulse" />
             ))}
