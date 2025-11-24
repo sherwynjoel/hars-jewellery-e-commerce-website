@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { sendEmail } from '@/lib/mailer'
+import { buildInvoiceEmail } from '@/lib/invoice-email'
 import crypto from 'crypto'
 
 export async function POST(request: NextRequest) {
@@ -34,6 +36,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid payment signature' }, { status: 400 })
     }
 
+    // Determine customer email - prioritize customer object, then session
+    const customerEmail = customer?.email || session.user.email || null
+
     // Create order in database
     const order = await prisma.order.create({
       data: {
@@ -41,7 +46,7 @@ export async function POST(request: NextRequest) {
         total: total,
         status: 'PROCESSING',
         customerName: customer?.name ?? session.user.name ?? 'Customer',
-        email: customer?.email ?? session.user.email,
+        email: customerEmail || '',
         phone: customer?.phone ?? '',
         addressLine1: customer?.addressLine1 ?? '',
         addressLine2: customer?.addressLine2 ?? null,
@@ -64,6 +69,43 @@ export async function POST(request: NextRequest) {
         }
       }
     })
+
+    console.log('Payment Verify: Order created successfully:', order.id)
+    console.log('Payment Verify: Order email:', order.email)
+
+    // Send invoice email to customer after successful payment
+    const emailToSend = (order.email || customerEmail || session.user.email || '').trim()
+    
+    console.log('Payment Verify: Checking email for invoice...', { 
+      orderEmail: order.email, 
+      customerEmail: customer?.email,
+      sessionEmail: session.user.email,
+      emailToSend,
+      isValidEmail: emailToSend && emailToSend.includes('@')
+    })
+    
+    if (emailToSend && emailToSend.includes('@')) {
+      try {
+        console.log('Payment Verify: Building invoice email for:', emailToSend)
+        const invoiceHtml = buildInvoiceEmail(order)
+        const emailSubject = `Invoice ${order.id.slice(-8).toUpperCase()} - Hars Jewellery`
+        console.log('Payment Verify: Sending invoice email...', { to: emailToSend, subject: emailSubject })
+        
+        const emailResult = await sendEmail(emailToSend, emailSubject, invoiceHtml)
+        
+        if (emailResult.success) {
+          console.log('Payment Verify: ✅ Invoice email sent successfully to:', emailToSend)
+        } else {
+          console.error('Payment Verify: ❌ Failed to send invoice email:', emailResult.error)
+        }
+      } catch (emailError) {
+        console.error('Payment Verify: ❌ Exception while sending invoice email:', emailError)
+        console.error('Payment Verify: Email error details:', emailError instanceof Error ? emailError.message : String(emailError))
+        // Don't fail the payment verification if email fails
+      }
+    } else {
+      console.warn('Payment Verify: ⚠️ No email address found for order. Order email:', order.email, 'Customer:', customer?.email, 'Session:', session.user.email)
+    }
 
     return NextResponse.json({
       success: true,

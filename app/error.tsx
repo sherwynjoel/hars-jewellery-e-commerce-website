@@ -22,7 +22,7 @@ export default function Error({
           <Link href="/" className="inline-flex items-center space-x-3 justify-center">
             <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden ring-2 ring-gray-200 bg-white flex-shrink-0 shadow-lg">
               <Image
-                src="/hars%20logo.jpg"
+                src="/hars-logo.jpg"
                 alt="Hars Jewellery"
                 width={80}
                 height={80}
