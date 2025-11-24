@@ -12,8 +12,7 @@ const categories = [
   { name: 'Rings', value: 'Rings' },
   { name: 'Necklaces', value: 'Necklaces' },
   { name: 'Earrings', value: 'Earrings' },
-  { name: 'Bracelets', value: 'Bracelets' },
-  { name: 'Watches', value: 'Watches' }
+  { name: 'Bracelets', value: 'Bracelets' }
 ]
 
 const sortOptions = [
