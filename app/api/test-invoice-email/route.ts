@@ -91,8 +91,6 @@ export async function POST(request: NextRequest) {
             productId: mockProduct.id,
             quantity: 1,
             price: mockProduct.price,
-            createdAt: new Date(),
-            updatedAt: new Date(),
             product: mockProduct
           }
         ]
