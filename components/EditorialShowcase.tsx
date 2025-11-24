@@ -5,6 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { ArrowUpRight } from 'lucide-react'
+import { shouldUnoptimizeImage } from '@/lib/image-utils'
 
 interface EditorialFeature {
   id: string
@@ -103,7 +104,7 @@ export default function EditorialShowcase() {
                         fill
                         sizes="(max-width: 768px) 50vw, 25vw"
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
-                        unoptimized={item.imageUrl?.startsWith('/uploads/')}
+                        unoptimized={shouldUnoptimizeImage(item.imageUrl)}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-400" />
                       <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6 text-white pointer-events-none">

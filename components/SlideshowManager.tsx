@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Upload, Trash2, ArrowUp, ArrowDown, Eye, EyeOff } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Image from 'next/image'
+import { shouldUnoptimizeImage } from '@/lib/image-utils'
 
 interface SlideshowImage {
   id: string
@@ -211,6 +212,7 @@ export default function SlideshowManager() {
                     alt={image.title || 'Slideshow image'}
                     fill
                     className="object-cover"
+                    unoptimized={shouldUnoptimizeImage(image.url)}
                   />
                 )}
                 {!image.isActive && (

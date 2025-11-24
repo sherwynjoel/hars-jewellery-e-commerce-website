@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
+import { shouldUnoptimizeImage } from '@/lib/image-utils'
 
 interface SlideshowImage {
   id: string
@@ -212,6 +213,7 @@ export default function HeroSlideshow() {
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 1200px"
             quality={85}
             loading={currentIndex === 0 ? 'eager' : 'lazy'}
+            unoptimized={shouldUnoptimizeImage(currentImage.url)}
           />
           
           {/* Overlay for text readability - Stronger on mobile */}

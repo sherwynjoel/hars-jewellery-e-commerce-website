@@ -10,6 +10,7 @@ import { ArrowLeft, ShoppingCart } from 'lucide-react'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { useCartStore } from '@/lib/store'
+import { shouldUnoptimizeImage } from '@/lib/image-utils'
 
 interface ProductImage { url: string }
 interface Product {
@@ -106,7 +107,7 @@ export default function ProductPage() {
                   sizes="(max-width: 768px) 100vw, 50vw"
                   className="object-cover transition-all duration-500"
                   priority
-                  unoptimized={(images[activeIndex] || '').startsWith('/uploads/')}
+                  unoptimized={shouldUnoptimizeImage(images[activeIndex])}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent pointer-events-none"></div>
               </div>
@@ -129,7 +130,7 @@ export default function ProductPage() {
                         alt="thumb" 
                         fill 
                         className="object-cover"
-                        unoptimized={url.startsWith('/uploads/')}
+                        unoptimized={shouldUnoptimizeImage(url)}
                       />
                     </motion.button>
                   ))}

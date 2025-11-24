@@ -14,14 +14,14 @@ export const metadata: Metadata = {
   manifest: '/manifest.webmanifest',
   icons: {
     icon: [
-      { url: '/hars%20logo.jpg', sizes: 'any' },
-      { url: '/hars%20logo.jpg', type: 'image/jpeg', sizes: '32x32' },
-      { url: '/hars%20logo.jpg', type: 'image/jpeg', sizes: '16x16' },
+      { url: '/hars logo.jpg', sizes: 'any' },
+      { url: '/hars logo.jpg', type: 'image/jpeg', sizes: '32x32' },
+      { url: '/hars logo.jpg', type: 'image/jpeg', sizes: '16x16' },
     ],
     apple: [
-      { url: '/hars%20logo.jpg', sizes: '180x180', type: 'image/jpeg' },
+      { url: '/hars logo.jpg', sizes: '180x180', type: 'image/jpeg' },
     ],
-    shortcut: '/hars%20logo.jpg',
+    shortcut: '/hars logo.jpg',
   },
 }
 

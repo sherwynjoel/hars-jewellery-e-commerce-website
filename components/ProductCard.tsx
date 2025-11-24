@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { useCartStore } from '@/lib/store'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
+import { shouldUnoptimizeImage } from '@/lib/image-utils'
 
 interface Product {
   id: string
@@ -74,7 +75,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
                 className={`object-cover transition-opacity duration-300 ${isHovered ? 'opacity-0' : 'opacity-100'}`}
                 priority={index < 4}
                 quality={95}
-                unoptimized={(product.images[0]?.url || product.image || '').startsWith('/uploads/')}
+                unoptimized={shouldUnoptimizeImage(product.images[0]?.url || product.image)}
               />
               <Image
                 src={product.images[1]?.url || product.image || '/placeholder-jewelry.jpg'}
@@ -84,7 +85,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
                 className={`object-cover transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
                 priority={index < 4}
                 quality={95}
-                unoptimized={(product.images[1]?.url || product.image || '').startsWith('/uploads/')}
+                unoptimized={shouldUnoptimizeImage(product.images[1]?.url || product.image)}
               />
             </>
           ) : (
@@ -96,7 +97,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
               quality={95}
               className="object-cover transition-transform duration-300 group-hover:scale-110"
               priority={index < 4}
-              unoptimized={(product.image || '').startsWith('/uploads/')}
+              unoptimized={shouldUnoptimizeImage(product.image)}
             />
           )}
           

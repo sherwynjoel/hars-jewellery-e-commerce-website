@@ -1,0 +1,90 @@
+# Copy and paste these commands on your VPS one by one
+
+cd /var/www/hars-jewellery
+
+# 1. Create the API route directory
+mkdir -p app/api/uploads/\[filename\]
+
+# 2. Create the API route file
+cat > app/api/uploads/\[filename\]/route.ts << 'ENDOFFILE'
+import { NextRequest, NextResponse } from 'next/server'
+import { readFile } from 'fs/promises'
+import { join } from 'path'
+import { existsSync } from 'fs'
+
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { filename: string } }
+) {
+  try {
+    const { filename } = params
+    if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+      return NextResponse.json({ error: 'Invalid filename' }, { status: 400 })
+    }
+    const uploadsDir = join(process.cwd(), 'public', 'uploads')
+    const filepath = join(uploadsDir, filename)
+    if (!existsSync(filepath)) {
+      return NextResponse.json({ error: 'File not found' }, { status: 404 })
+    }
+    const fileBuffer = await readFile(filepath)
+    const ext = filename.split('.').pop()?.toLowerCase()
+    const contentTypeMap: Record<string, string> = {
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      png: 'image/png',
+      gif: 'image/gif',
+      webp: 'image/webp',
+      svg: 'image/svg+xml',
+      mp4: 'video/mp4',
+      webm: 'video/webm',
+      mov: 'video/quicktime',
+    }
+    const contentType = contentTypeMap[ext || ''] || 'application/octet-stream'
+    return new NextResponse(fileBuffer, {
+      status: 200,
+      headers: {
+        'Content-Type': contentType,
+        'Cache-Control': 'public, max-age=31536000, immutable',
+        'Content-Length': fileBuffer.length.toString(),
+      },
+    })
+  } catch (error) {
+    console.error('Error serving upload:', error)
+    return NextResponse.json({ error: 'Failed to serve file' }, { status: 500 })
+  }
+}
+ENDOFFILE
+
+# 3. Update the upload route to return API URLs
+# First, backup the original
+cp app/api/upload/route.ts app/api/upload/route.ts.backup
+
+# Now edit it - replace the fileUrl line
+sed -i 's|const fileUrl = `/uploads/${filename}`|const fileUrl = `/api/uploads/${filename}`\n    const staticUrl = `/uploads/${filename}`|' app/api/upload/route.ts
+
+# Update the return statement to include staticUrl
+sed -i '/imageUrl: fileUrl,/a\      staticUrl,' app/api/upload/route.ts || true
+
+# 4. Create image-utils.ts
+mkdir -p lib
+cat > lib/image-utils.ts << 'ENDOFFILE'
+export function shouldUnoptimizeImage(url: string | undefined | null): boolean {
+  if (!url) return false
+  return url.startsWith('/uploads/') || url.startsWith('/api/uploads/')
+}
+ENDOFFILE
+
+# 5. Rebuild
+rm -rf .next
+npm run build
+
+# 6. Restart PM2
+pm2 restart hars-jewellery --update-env
+
+# 7. Test
+sleep 3
+curl -I http://localhost:3000/api/uploads/1763916772416-eb241a5b3646245d06b9267e63f849ec.jpg
+

@@ -53,14 +53,18 @@ export async function POST(request: NextRequest) {
     // Save file
     await writeFile(filepath, buffer)
 
-    // Return the public URL
-    const fileUrl = `/uploads/${filename}`
+    // Return the public URL - use API route for immediate availability
+    // The API route serves files dynamically, so no server restart needed
+    const fileUrl = `/api/uploads/${filename}`
+    // Also provide the static path for backward compatibility
+    const staticUrl = `/uploads/${filename}`
 
     return NextResponse.json({ 
       success: true, 
-      imageUrl: fileUrl, // Keep for backward compatibility
+      imageUrl: fileUrl, // Use API route for immediate availability
       videoUrl: isVideo ? fileUrl : undefined,
       fileUrl,
+      staticUrl, // For backward compatibility
       fileType: isVideo ? 'video' : 'image',
       filename 
     })
