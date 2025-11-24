@@ -50,7 +50,7 @@ export default function AdminPanel() {
   const [loadingSubscribers, setLoadingSubscribers] = useState(false)
   
   // Admin inactivity tracking
-  const { shouldShowWarning, remainingMinutes, remainingSeconds, resetTimer } = useAdminInactivity()
+  const { shouldShowWarning, remainingMinutes, remainingSeconds } = useAdminInactivity()
 
   useEffect(() => {
     if (status === 'loading') return
@@ -283,17 +283,11 @@ export default function AdminPanel() {
                 <div>
                   <p className="font-semibold">Session Timeout Warning</p>
                   <p className="text-sm text-yellow-100">
-                    You will be automatically logged out in {remainingMinutes} minute{remainingMinutes !== 1 ? 's' : ''} due to inactivity.
-                    Move your mouse or click anywhere to stay logged in.
+                    For security, the admin session expires every 30 minutes. You will be logged out in{' '}
+                    {remainingMinutes}:{remainingSeconds.toString().padStart(2, '0')}. Please save your work and sign in again if needed.
                   </p>
                 </div>
               </div>
-              <button
-                onClick={resetTimer}
-                className="px-4 py-2 bg-white text-yellow-600 rounded-lg font-semibold hover:bg-yellow-50 transition-colors"
-              >
-                Stay Logged In
-              </button>
             </div>
           </motion.div>
         )}
