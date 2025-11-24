@@ -302,7 +302,7 @@ export default function VideoCarousel() {
 
             {/* Dots Indicator */}
             {visibleItems.length > 1 && (
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 z-50">
+              <div className="hidden sm:flex absolute bottom-4 left-1/2 -translate-x-1/2 items-center gap-2 z-50">
                 {visibleItems.map((_, index) => (
                   <button
                     key={index}
