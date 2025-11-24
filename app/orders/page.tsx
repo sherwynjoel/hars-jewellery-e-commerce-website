@@ -349,23 +349,23 @@ export default function OrdersPage() {
                                 <p>Coimbatore, Tamil Nadu</p>
                               </div>
                             </div>
-                            <div className="overflow-hidden rounded-2xl border border-gray-200">
+                            <div className="overflow-x-auto rounded-2xl border border-gray-200">
                               <table className="min-w-full text-sm">
                                 <thead>
                                   <tr className="bg-black text-white">
-                                    <th className="px-4 py-3 text-left text-xs font-semibold tracking-[0.35em] uppercase">Product</th>
-                                    <th className="px-4 py-3 text-right text-xs font-semibold tracking-[0.35em] uppercase">Price</th>
-                                    <th className="px-4 py-3 text-right text-xs font-semibold tracking-[0.35em] uppercase">Qty</th>
-                                    <th className="px-4 py-3 text-right text-xs font-semibold tracking-[0.35em] uppercase">Total</th>
+                                    <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-semibold tracking-[0.15em] sm:tracking-[0.35em] uppercase whitespace-nowrap">Product</th>
+                                    <th className="px-2 sm:px-4 py-2 sm:py-3 text-right text-[10px] sm:text-xs font-semibold tracking-[0.15em] sm:tracking-[0.35em] uppercase whitespace-nowrap">Price</th>
+                                    <th className="px-2 sm:px-4 py-2 sm:py-3 text-right text-[10px] sm:text-xs font-semibold tracking-[0.15em] sm:tracking-[0.35em] uppercase whitespace-nowrap">Qty</th>
+                                    <th className="px-2 sm:px-4 py-2 sm:py-3 text-right text-[10px] sm:text-xs font-semibold tracking-[0.15em] sm:tracking-[0.35em] uppercase whitespace-nowrap">Total</th>
                                   </tr>
                                 </thead>
                                 <tbody>
                                   {order.items.map((item) => (
                                     <tr key={`inv-${item.id}`} className="border-b border-gray-200">
-                                      <td className="px-4 py-3 text-gray-800">{item.product.name}</td>
-                                      <td className="px-4 py-3 text-right text-gray-600">{formatCurrency(item.price)}</td>
-                                      <td className="px-4 py-3 text-right text-gray-600">{item.quantity}</td>
-                                      <td className="px-4 py-3 text-right font-semibold text-gray-900">
+                                      <td className="px-2 sm:px-4 py-2 sm:py-3 text-gray-800 text-xs sm:text-sm">{item.product.name}</td>
+                                      <td className="px-2 sm:px-4 py-2 sm:py-3 text-right text-gray-600 text-xs sm:text-sm whitespace-nowrap">{formatCurrency(item.price)}</td>
+                                      <td className="px-2 sm:px-4 py-2 sm:py-3 text-right text-gray-600 text-xs sm:text-sm whitespace-nowrap">{item.quantity}</td>
+                                      <td className="px-2 sm:px-4 py-2 sm:py-3 text-right font-semibold text-gray-900 text-xs sm:text-sm whitespace-nowrap">
                                         {formatCurrency(item.price * item.quantity)}
                                       </td>
                                     </tr>

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { sendEmail } from '@/lib/mailer'
+import { buildInvoiceEmail } from '@/lib/invoice-email'
 
 export async function POST(request: NextRequest) {
   try {
@@ -94,6 +96,19 @@ export async function POST(request: NextRequest) {
       quantity: item.quantity,
       price: item.price
     })))
+
+    if (order.email) {
+      try {
+        const invoiceHtml = buildInvoiceEmail(order)
+        await sendEmail(
+          order.email,
+          `Invoice ${order.id.slice(-8).toUpperCase()} - Hars Jewellery`,
+          invoiceHtml
+        )
+      } catch (emailError) {
+        console.error('Order API: Failed to send invoice email:', emailError)
+      }
+    }
 
     console.log('Order API: Order created successfully:', order.id)
     return NextResponse.json(order)
