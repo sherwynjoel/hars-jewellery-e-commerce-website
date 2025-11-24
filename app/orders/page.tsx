@@ -250,6 +250,8 @@ export default function OrdersPage() {
                                 const printContents = document.getElementById(`invoice-${order.id}`)?.innerHTML || ''
                                 const win = window.open('', '', 'width=800,height=900')
                                 if (!win) return
+                                const baseUrl = window.location.origin
+                                const adjustedContents = printContents.replace(/src="\/(?!\/)/g, `src="${baseUrl}/`)
                                 win.document.open()
                                 win.document.write(`<!DOCTYPE html><html><head><title>Invoice</title><style>
                                   body{font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;padding:24px;color:#111827}
@@ -258,7 +260,7 @@ export default function OrdersPage() {
                                   table{width:100%;border-collapse:collapse;margin-top:12px}
                                   th,td{font-size:14px;text-align:left;padding:8px;border-bottom:1px solid #E5E7EB}
                                   .right{text-align:right}
-                                </style></head><body>${printContents}</body></html>`)
+                                </style></head><body>${adjustedContents}</body></html>`)
                                 win.document.close()
                                 win.focus()
                                 win.print()
