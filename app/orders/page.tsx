@@ -271,19 +271,14 @@ export default function OrdersPage() {
                             </button>
                           </div>
                           <div id={`invoice-${order.id}`}>
-                            <div className="mb-4 flex items-start gap-4">
-                              <div className="w-14 h-14 rounded-full overflow-hidden border border-gray-200 bg-white flex-shrink-0">
-                                <img src={COMPANY_INFO.logo} alt="Hars Jewellery Logo" className="w-full h-full object-cover" />
-                              </div>
-                              <div>
-                                <h2 className="text-base font-semibold text-dark-900">{COMPANY_INFO.name}</h2>
-                                <div className="text-xs text-gray-600 leading-snug">
-                                  <div>{COMPANY_INFO.address}</div>
-                                  <div>GSTIN/UIN: {COMPANY_INFO.gst}</div>
-                                  <div>State: {COMPANY_INFO.state}</div>
-                                  <div>Contact: {COMPANY_INFO.contact}</div>
-                                  <div>Email: {COMPANY_INFO.email}</div>
-                                </div>
+                            <div className="mb-4">
+                              <h2 className="text-base font-semibold text-dark-900">{COMPANY_INFO.name}</h2>
+                              <div className="text-xs text-gray-600 leading-snug">
+                                <div>{COMPANY_INFO.address}</div>
+                                <div>GSTIN/UIN: {COMPANY_INFO.gst}</div>
+                                <div>State: {COMPANY_INFO.state}</div>
+                                <div>Contact: {COMPANY_INFO.contact}</div>
+                                <div>Email: {COMPANY_INFO.email}</div>
                               </div>
                             </div>
                             <div className="text-xs text-gray-600 mb-3">
