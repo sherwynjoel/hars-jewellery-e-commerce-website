@@ -59,8 +59,9 @@ export async function POST(request: NextRequest) {
       }
 
       // Create a temporary mock order
+      const testOrderId = `test-${Date.now()}`
       order = {
-        id: `test-${Date.now()}`,
+        id: testOrderId,
         userId: session.user.id,
         total: mockProduct.price * 1.03 + (mockProduct.shippingCost || 0), // price + tax + shipping
         customerName: session.user.name || 'Test Customer',
@@ -73,14 +74,20 @@ export async function POST(request: NextRequest) {
         postalCode: '641001',
         addressVerified: true,
         addressVerifiedAt: new Date(),
+        addressVerifiedBy: null,
         addressVerificationMethod: 'TEST',
+        trackingNumber: null,
+        trackingCarrier: null,
+        trackingUrl: null,
+        shippedAt: null,
+        deliveredAt: null,
         status: 'PENDING',
         createdAt: new Date(),
         updatedAt: new Date(),
         items: [
           {
             id: `test-item-${Date.now()}`,
-            orderId: `test-${Date.now()}`,
+            orderId: testOrderId,
             productId: mockProduct.id,
             quantity: 1,
             price: mockProduct.price,
