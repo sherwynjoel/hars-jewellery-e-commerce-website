@@ -101,16 +101,17 @@ export async function POST(request: NextRequest) {
     })))
 
     // Send invoice email to customer
-    const emailToSend = order.email || customerEmail || session.user.email
+    const emailToSend = (order.email || customerEmail || session.user.email || '').trim()
     
     console.log('Order API: Checking email for invoice...', { 
       orderEmail: order.email, 
       customerEmail: customer?.email,
       sessionEmail: session.user.email,
-      emailToSend
+      emailToSend,
+      isValidEmail: emailToSend && emailToSend.includes('@')
     })
     
-    if (emailToSend) {
+    if (emailToSend && emailToSend.includes('@')) {
       try {
         console.log('Order API: Building invoice email for:', emailToSend)
         const invoiceHtml = buildInvoiceEmail(order)

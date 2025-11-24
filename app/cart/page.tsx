@@ -87,7 +87,7 @@ export default function CartPage() {
     }
   }, [status, router])
 
-  // Load any saved address from localStorage on mount
+  // Load any saved address from localStorage on mount and pre-fill email from session
   useEffect(() => {
     try {
       const saved = localStorage.getItem('saved-address')
@@ -97,12 +97,17 @@ export default function CartPage() {
       }
     } catch {}
     
+    // Pre-fill email from session if available and not already set
+    if (session?.user?.email && !customer.email) {
+      setCustomer((prev) => ({ ...prev, email: session.user.email || '' }))
+    }
+    
     // Fetch service status
     fetch('/api/admin/service-status')
       .then(r => r.json())
       .then(data => setServiceStatus(data))
       .catch(() => {})
-  }, [])
+  }, [session])
 
   const handleSaveAddress = () => {
     if (!isCustomerValid()) {
@@ -256,6 +261,12 @@ export default function CartPage() {
         session: !!session
       })
       console.log('Cart: Items being sent to order API:', items)
+      console.log('Cart: Customer details being sent:', {
+        name: customer.name,
+        email: customer.email,
+        phone: customer.phone,
+        hasEmail: !!customer.email
+      })
 
       const autoVerified = Boolean(pincodeValidation?.isValid && checkCityStateMatch())
 
