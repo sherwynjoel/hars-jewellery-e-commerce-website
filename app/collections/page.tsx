@@ -153,34 +153,6 @@ export default function CollectionsPage() {
               </div>
             </div>
 
-            {/* Mobile Filters */}
-            {showFilters && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="mt-4 pt-4 border-t border-gray-200 lg:hidden"
-              >
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Category
-                    </label>
-                    <select
-                      value={selectedCategory}
-                      onChange={(e) => setSelectedCategory(e.target.value)}
-                      className="input-field w-full"
-                    >
-                      {categories.map((category) => (
-                        <option key={category.value} value={category.value}>
-                          {category.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              </motion.div>
-            )}
           </motion.div>
 
           {/* Products Grid */}
