@@ -58,12 +58,15 @@ export async function POST(request: NextRequest) {
     const autoVerified = Boolean(addressVerification?.verified)
     const verificationMethod = addressVerification?.method || 'AUTO_PINCODE'
 
+    // Determine customer email - prioritize customer object, then session
+    const customerEmail = customer?.email || session.user.email || null
+    
     const order = await prisma.order.create({
       data: {
         userId: session.user.id,
         total: orderTotal,
         customerName: customer?.name ?? session.user.name ?? 'Customer',
-        email: customer?.email ?? session.user.email,
+        email: customerEmail,
         phone: customer?.phone ?? '',
         addressLine1: customer?.addressLine1 ?? '',
         addressLine2: customer?.addressLine2 ?? null,
@@ -97,17 +100,36 @@ export async function POST(request: NextRequest) {
       price: item.price
     })))
 
-    if (order.email) {
+    // Send invoice email to customer
+    const emailToSend = order.email || customerEmail || session.user.email
+    
+    console.log('Order API: Checking email for invoice...', { 
+      orderEmail: order.email, 
+      customerEmail: customer?.email,
+      sessionEmail: session.user.email,
+      emailToSend
+    })
+    
+    if (emailToSend) {
       try {
+        console.log('Order API: Building invoice email for:', emailToSend)
         const invoiceHtml = buildInvoiceEmail(order)
-        await sendEmail(
-          order.email,
-          `Invoice ${order.id.slice(-8).toUpperCase()} - Hars Jewellery`,
-          invoiceHtml
-        )
+        const emailSubject = `Invoice ${order.id.slice(-8).toUpperCase()} - Hars Jewellery`
+        console.log('Order API: Sending invoice email...', { to: emailToSend, subject: emailSubject })
+        
+        const emailResult = await sendEmail(emailToSend, emailSubject, invoiceHtml)
+        
+        if (emailResult.success) {
+          console.log('Order API: ✅ Invoice email sent successfully to:', emailToSend)
+        } else {
+          console.error('Order API: ❌ Failed to send invoice email:', emailResult.error)
+        }
       } catch (emailError) {
-        console.error('Order API: Failed to send invoice email:', emailError)
+        console.error('Order API: ❌ Exception while sending invoice email:', emailError)
+        console.error('Order API: Email error details:', emailError instanceof Error ? emailError.message : String(emailError))
       }
+    } else {
+      console.warn('Order API: ⚠️ No email address found for order. Order email:', order.email, 'Customer:', customer?.email, 'Session:', session.user.email)
     }
 
     console.log('Order API: Order created successfully:', order.id)
