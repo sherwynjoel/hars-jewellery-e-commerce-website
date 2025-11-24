@@ -272,15 +272,20 @@ export default function OrdersPage() {
                       {openInvoiceId === order.id && (
                         <div className="p-6 bg-white rounded-2xl border border-gray-200 shadow-lg">
                           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-6">
-                            <div>
-                              <p className="text-xs uppercase tracking-[0.5em] text-gray-400">Invoice</p>
-                              <h2 className="text-3xl font-serif font-bold text-dark-900">Hars Jewellery</h2>
-                              <div className="mt-2 text-sm text-gray-600 leading-relaxed">
-                                <div>{COMPANY_INFO.address}</div>
-                                <div>GSTIN/UIN: {COMPANY_INFO.gst}</div>
-                                <div>{COMPANY_INFO.state}</div>
-                                <div>{COMPANY_INFO.contact}</div>
-                                <div>{COMPANY_INFO.email}</div>
+                            <div className="flex items-start gap-4">
+                              <div className="w-14 h-14 rounded-full overflow-hidden border border-gray-200 bg-white flex-shrink-0">
+                                <img src="/hars-logo.jpg" alt="Hars Jewellery Logo" className="w-full h-full object-contain p-1 bg-white" />
+                              </div>
+                              <div>
+                                <p className="text-xs uppercase tracking-[0.5em] text-gray-400">Invoice</p>
+                                <h2 className="text-3xl font-serif font-bold text-dark-900">Hars Jewellery</h2>
+                                <div className="mt-2 text-sm text-gray-600 leading-relaxed">
+                                  <div>{COMPANY_INFO.address}</div>
+                                  <div>GSTIN/UIN: {COMPANY_INFO.gst}</div>
+                                  <div>{COMPANY_INFO.state}</div>
+                                  <div>{COMPANY_INFO.contact}</div>
+                                  <div>{COMPANY_INFO.email}</div>
+                                </div>
                               </div>
                             </div>
                             <div className="text-sm text-gray-600 space-y-2 md:text-right">
@@ -304,12 +309,10 @@ export default function OrdersPage() {
                                     body{font-family:'Inter',ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;padding:48px;color:#0f172a;background:#fff}
                                     h1,h2,h3,h4{margin:0}
                                     .invoice-card{max-width:720px;margin:0 auto;border:1px solid #e2e8f0;border-radius:24px;padding:40px}
-                                    .grid{display:flex;justify-content:space-between;gap:32px;margin-top:32px}
+                                    @page { margin: 32px }
                                     table{width:100%;border-collapse:collapse;margin-top:32px;font-size:14px}
                                     th{background:#111827;color:#fff;text-transform:uppercase;font-size:12px;letter-spacing:0.2em;padding:12px;text-align:left}
                                     td{padding:12px;border-bottom:1px solid #e2e8f0}
-                                    .summary{margin-top:32px;display:flex;justify-content:space-between;gap:24px;font-size:14px}
-                                    .summary-right div{display:flex;justify-content:space-between;margin-bottom:8px}
                                     .total{background:#111827;color:#fff;border-radius:12px;padding:12px 16px;font-weight:bold}
                                     .footer{margin-top:48px;font-size:13px;display:flex;justify-content:space-between;align-items:center}
                                   </style></head><body><div class="invoice-card">${adjustedContents}</div></body></html>`)
