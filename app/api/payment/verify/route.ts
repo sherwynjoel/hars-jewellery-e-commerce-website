@@ -8,13 +8,23 @@ import crypto from 'crypto'
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('=== PAYMENT VERIFICATION STARTED ===')
     const session = await getServerSession(authOptions)
     
     if (!session) {
+      console.log('Payment Verify: ❌ No session found')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    console.log('Payment Verify: Session found for user:', session.user.email)
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, items, total, customer } = await request.json()
+    console.log('Payment Verify: Received payment data:', {
+      razorpay_order_id,
+      razorpay_payment_id: razorpay_payment_id?.substring(0, 10) + '...',
+      itemsCount: items?.length,
+      total,
+      customerEmail: customer?.email
+    })
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       return NextResponse.json({ error: 'Missing payment details' }, { status: 400 })
@@ -70,8 +80,10 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    console.log('Payment Verify: Order created successfully:', order.id)
+    console.log('=== ORDER CREATED SUCCESSFULLY ===')
+    console.log('Payment Verify: Order ID:', order.id)
     console.log('Payment Verify: Order email:', order.email)
+    console.log('Payment Verify: Order total:', order.total)
 
     // Send invoice email to customer after successful payment
     const emailToSend = (order.email || customerEmail || session.user.email || '').trim()
@@ -94,8 +106,11 @@ export async function POST(request: NextRequest) {
         const emailResult = await sendEmail(emailToSend, emailSubject, invoiceHtml)
         
         if (emailResult.success) {
+          console.log('=== INVOICE EMAIL SENT SUCCESSFULLY ===')
           console.log('Payment Verify: ✅ Invoice email sent successfully to:', emailToSend)
+          console.log('Payment Verify: Invoice number:', order.id.slice(-8).toUpperCase())
         } else {
+          console.error('=== INVOICE EMAIL FAILED ===')
           console.error('Payment Verify: ❌ Failed to send invoice email:', emailResult.error)
         }
       } catch (emailError) {
@@ -107,6 +122,7 @@ export async function POST(request: NextRequest) {
       console.warn('Payment Verify: ⚠️ No email address found for order. Order email:', order.email, 'Customer:', customer?.email, 'Session:', session.user.email)
     }
 
+    console.log('=== PAYMENT VERIFICATION COMPLETED ===')
     return NextResponse.json({
       success: true,
       order,
