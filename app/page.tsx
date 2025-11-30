@@ -193,7 +193,7 @@ export default function HomePage() {
             </p>
           </motion.div>
 
-          <ProductGrid limit={6} />
+          <ProductGrid limit={20} />
         </div>
       </section>
 
