@@ -11,101 +11,101 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  password  String
-  mobile    String?  @unique
-  role      Role     @default(USER)
+  id                        String          @id @default(cuid())
+  email                     String          @unique
+  name                      String?
+  password                  String
+  mobile                    String?         @unique
+  role                      Role            @default(USER)
   // Email verification and OTP auth
-  emailVerifiedAt     DateTime?
-  verifyOtpHash       String?
-  verifyOtpExpiresAt  DateTime?
-  loginOtpHash        String?
-  loginOtpExpiresAt   DateTime?
-  otpAttemptCount     Int       @default(0)
-  lastOtpSentAt       DateTime?
+  emailVerifiedAt           DateTime?
+  verifyOtpHash             String?
+  verifyOtpExpiresAt        DateTime?
+  loginOtpHash              String?
+  loginOtpExpiresAt         DateTime?
+  otpAttemptCount           Int             @default(0)
+  lastOtpSentAt             DateTime?
   // Admin security fields
-  adminLoginAttempts     Int       @default(0)
-  adminLoginLockedUntil  DateTime?
-  lastAdminLoginAt       DateTime?
-  lastAdminLoginIp       String?
-  adminTwoFactorEnabled  Boolean   @default(false)
-  adminTwoFactorSecret   String?
+  adminLoginAttempts        Int             @default(0)
+  adminLoginLockedUntil     DateTime?
+  lastAdminLoginAt          DateTime?
+  lastAdminLoginIp          String?
+  adminTwoFactorEnabled     Boolean         @default(false)
+  adminTwoFactorSecret      String?
   // Admin panel access verification
-  adminPanelVerifiedAt   DateTime?
-  adminPanelVerifyToken  String?
+  adminPanelVerifiedAt      DateTime?
+  adminPanelVerifyToken     String?
   adminPanelVerifyExpiresAt DateTime?
   // Password reset
-  resetPasswordToken     String?
-  resetPasswordExpiresAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  cart      CartItem[]
-  orders    Order[]
-  adminActivities AdminActivity[]
+  resetPasswordToken        String?
+  resetPasswordExpiresAt    DateTime?
+  createdAt                 DateTime        @default(now())
+  updatedAt                 DateTime        @updatedAt
+  cart                      CartItem[]
+  orders                    Order[]
+  adminActivities           AdminActivity[]
 }
 
 model Product {
-  id          String   @id @default(cuid())
-  name        String
-  description String
-  price       Float
-  image       String
-  category    String
-  inStock     Boolean  @default(true)
-  stockCount  Int      @default(0)
-  goldWeightGrams Float?
-  shippingCost Float?  @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  cartItems   CartItem[]
-  orderItems  OrderItem[]
-  images      ProductImage[]
+  id                String             @id @default(cuid())
+  name              String
+  description       String
+  price             Float
+  image             String
+  category          String
+  inStock           Boolean            @default(true)
+  stockCount        Int                @default(0)
+  goldWeightGrams   Float?
+  shippingCost      Float?             @default(0)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  cartItems         CartItem[]
+  orderItems        OrderItem[]
+  images            ProductImage[]
   editorialFeatures EditorialFeature[]
 }
 
 model CartItem {
-  id        String  @id @default(cuid())
+  id        String   @id @default(cuid())
   userId    String
   productId String
-  quantity  Int     @default(1)
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Int      @default(1)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 
   @@unique([userId, productId])
 }
 
 model Order {
-  id        String      @id @default(cuid())
-  userId    String
-  total     Float
-  status    OrderStatus @default(PENDING)
-  items     OrderItem[]
-  user      User        @relation(fields: [userId], references: [id])
+  id                        String      @id @default(cuid())
+  userId                    String
+  total                     Float
+  status                    OrderStatus @default(PENDING)
+  items                     OrderItem[]
+  user                      User        @relation(fields: [userId], references: [id])
   // Delivery/contact details
-  customerName String   @default("")
-  email        String   @default("")
-  phone        String   @default("")
-  addressLine1 String   @default("")
-  addressLine2 String?
-  city         String   @default("")
-  state         String   @default("")
-  postalCode   String   @default("")
+  customerName              String      @default("")
+  email                     String      @default("")
+  phone                     String      @default("")
+  addressLine1              String      @default("")
+  addressLine2              String?
+  city                      String      @default("")
+  state                     String      @default("")
+  postalCode                String      @default("")
   // Address verification
-  addressVerified     Boolean   @default(false)
-  addressVerifiedAt   DateTime?
-  addressVerifiedBy   String?   // Admin user ID who verified
+  addressVerified           Boolean     @default(false)
+  addressVerifiedAt         DateTime?
+  addressVerifiedBy         String? // Admin user ID who verified
   addressVerificationMethod String? // e.g., "OTP", "MANUAL", "ADMIN"
   // Shipment tracking
-  trackingNumber String?
-  trackingCarrier String?
-  trackingUrl     String?
-  shippedAt       DateTime?
-  deliveredAt     DateTime?
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  trackingNumber            String?
+  trackingCarrier           String?
+  trackingUrl               String?
+  shippedAt                 DateTime?
+  deliveredAt               DateTime?
+  createdAt                 DateTime    @default(now())
+  updatedAt                 DateTime    @updatedAt
 }
 
 model OrderItem {
@@ -147,11 +147,11 @@ enum OrderStatus {
 }
 
 model GoldPrice {
-  id        String   @id @default(cuid())
-  date      DateTime @unique
+  id           String   @id @default(cuid())
+  date         DateTime @unique
   pricePerGram Float
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model SlideshowImage {
@@ -206,26 +206,38 @@ model EditorialFeature {
 }
 
 model AdminActivity {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  action    String   // e.g., "LOGIN", "CREATE_PRODUCT", "DELETE_USER", etc.
-  resource  String?  // e.g., "Product", "User", "Order"
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action     String // e.g., "LOGIN", "CREATE_PRODUCT", "DELETE_USER", etc.
+  resource   String? // e.g., "Product", "User", "Order"
   resourceId String? // ID of the resource affected
-  ipAddress String?
-  userAgent String?
-  details   String?  // JSON string with additional details
-  createdAt DateTime @default(now())
+  ipAddress  String?
+  userAgent  String?
+  details    String? // JSON string with additional details
+  createdAt  DateTime @default(now())
 
   @@index([userId])
   @@index([createdAt])
 }
 
 model ServiceStatus {
-  id            String   @id @default("service-status")
-  isStopped     Boolean  @default(false)
-  stoppedAt     DateTime?
-  message       String?  @default("Our services are stopped today. Please check after 12 hours.")
-  updatedAt     DateTime @updatedAt
-  updatedBy     String?  // Admin user ID who updated it
+  id        String    @id @default("service-status")
+  isStopped Boolean   @default(false)
+  stoppedAt DateTime?
+  message   String?   @default("Our services are stopped today. Please check after 12 hours.")
+  updatedAt DateTime  @updatedAt
+  updatedBy String? // Admin user ID who updated it
+}
+
+model VideoShowcase {
+  id        String   @id @default(cuid())
+  url       String
+  title     String?
+  subtitle  String?
+  position  Int      @default(0)
+  isActive  Boolean  @default(true)
+  duration  Int? // Duration in seconds
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

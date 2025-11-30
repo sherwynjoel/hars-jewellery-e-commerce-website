@@ -10,6 +10,7 @@ import Footer from '@/components/Footer'
 import HeroSlideshow from '@/components/HeroSlideshow'
 import VideoCarousel from '@/components/VideoCarousel'
 import Testimonials from '@/components/Testimonials'
+import VideoShowcase from '@/components/VideoShowcase'
 import EditorialShowcase from '@/components/EditorialShowcase'
 import { useEffect, useState } from 'react'
 
@@ -191,6 +192,9 @@ export default function HomePage() {
 
       {/* Testimonials Section */}
       <Testimonials />
+
+      {/* Video Showcase Section */}
+      <VideoShowcase />
 
       <Footer />
     </div>

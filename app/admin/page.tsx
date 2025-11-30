@@ -10,6 +10,7 @@ import Navigation from '@/components/Navigation'
 import ProductForm from '@/components/ProductForm'
 import SlideshowManager from '@/components/SlideshowManager'
 import VideoCarouselManager from '@/components/VideoCarouselManager'
+import VideoShowcaseManager from '@/components/VideoShowcaseManager'
 import TestimonialsManager from '@/components/TestimonialsManager'
 import EditorialShowcaseManager from '@/components/EditorialShowcaseManager'
 import { useAdminInactivity } from '@/lib/hooks/useAdminInactivity'
@@ -685,6 +686,16 @@ export default function AdminPanel() {
             className="card-elevated p-6 mb-8"
           >
             <TestimonialsManager />
+          </motion.div>
+
+          {/* Video Showcase Management */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.42 }}
+            className="card-elevated p-6 mb-8"
+          >
+            <VideoShowcaseManager />
           </motion.div>
 
           {/* Products Table */}
