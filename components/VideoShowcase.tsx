@@ -118,33 +118,9 @@ export default function VideoShowcase() {
     setPlaying((prev) => ({ ...prev, [itemId]: false }))
   }
 
-  if (loading) {
-    try {
-      return (
-        <section className="w-full py-16 bg-gradient-to-b from-gray-50 to-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-dark-900 mb-4">
-                Our Collection
-              </h2>
-              <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto">
-                Discover our exquisite range of handcrafted jewelry pieces.
-              </p>
-            </div>
-            <div className="w-full flex items-center justify-center" style={{ aspectRatio: '16/9' }}>
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
-            </div>
-          </div>
-        </section>
-      )
-    } catch (error) {
-      console.error('VideoShowcase: Error rendering loading state:', error)
-      return null
-    }
-  }
-
   const visibleItems = items.filter((item) => item.isActive)
   
+  // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   // Debug logging
   useEffect(() => {
     const activeItems = items.filter((item) => item.isActive)
@@ -161,6 +137,27 @@ export default function VideoShowcase() {
       setCurrentIndex(0)
     }
   }, [items, currentIndex])
+
+  // Now we can do conditional returns after all hooks
+  if (loading) {
+    return (
+      <section className="w-full py-16 bg-gradient-to-b from-gray-50 to-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-dark-900 mb-4">
+              Our Collection
+            </h2>
+            <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto">
+              Discover our exquisite range of handcrafted jewelry pieces.
+            </p>
+          </div>
+          <div className="w-full flex items-center justify-center" style={{ aspectRatio: '16/9' }}>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
+          </div>
+        </div>
+      </section>
+    )
+  }
 
   // Always show the section, even if no videos
   if (visibleItems.length === 0) {
