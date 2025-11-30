@@ -42,9 +42,24 @@ export default function VideoShowcase() {
       }
       const data = await response.json()
       const videoItems = Array.isArray(data) ? data : []
-      console.log('Video Showcase: Fetched items:', videoItems.length, videoItems)
+      console.log('Video Showcase: Fetched items:', videoItems.length, {
+        items: videoItems.map(item => ({
+          id: item.id,
+          url: item.url,
+          isActive: item.isActive,
+          title: item.title
+        }))
+      })
       setItems(videoItems)
       setCurrentIndex(0)
+      
+      // Log if videos are inactive
+      if (videoItems.length > 0) {
+        const activeCount = videoItems.filter(item => item.isActive).length
+        if (activeCount === 0) {
+          console.warn('Video Showcase: All videos are inactive! Activate them in admin panel.')
+        }
+      }
     } catch (error) {
       console.error('Failed to fetch video showcase:', error)
       // Fail silently - don't crash the page
@@ -124,7 +139,16 @@ export default function VideoShowcase() {
   }, [items, currentIndex])
 
   if (visibleItems.length === 0) {
-    console.log('Video Showcase: No active videos to display')
+    // Show helpful message in development or if there are items but they're inactive
+    if (items.length > 0) {
+      console.warn('Video Showcase: Videos exist but are inactive. Activate them in admin panel.', {
+        totalItems: items.length,
+        activeItems: items.filter(i => i.isActive).length,
+        allItems: items.map(i => ({ id: i.id, isActive: i.isActive, url: i.url }))
+      })
+    } else {
+      console.log('Video Showcase: No videos found. Add videos in admin panel.')
+    }
     return null
   }
 
@@ -133,9 +157,19 @@ export default function VideoShowcase() {
   const currentItem = visibleItems[safeIndex]
   
   if (!currentItem) {
-    console.error('Video Showcase: No current item found', { safeIndex, visibleItems })
+    console.error('Video Showcase: No current item found', { 
+      safeIndex, 
+      visibleItemsLength: visibleItems.length,
+      visibleItems: visibleItems.map(i => ({ id: i.id, url: i.url }))
+    })
     return null
   }
+
+  console.log('Video Showcase: Rendering video', {
+    currentItemId: currentItem.id,
+    currentItemUrl: currentItem.url,
+    totalVisible: visibleItems.length
+  })
 
   return (
     <section className="w-full py-16 bg-gradient-to-b from-gray-50 to-white">
