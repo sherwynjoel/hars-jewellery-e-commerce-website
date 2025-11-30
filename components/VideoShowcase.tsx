@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { ChevronLeft, ChevronRight, Play, Pause, Volume2, VolumeX } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -30,6 +30,13 @@ export default function VideoShowcase() {
     try {
       const response = await fetch('/api/video-showcase', { cache: 'no-store' })
       if (!response.ok) {
+        // If 500 error, likely database table doesn't exist - fail silently
+        if (response.status === 500) {
+          console.warn('Video Showcase API error (likely table missing):', response.status)
+          setItems([])
+          setLoading(false)
+          return
+        }
         console.error('Video Showcase API error:', response.status, response.statusText)
         throw new Error('Failed to fetch')
       }
@@ -40,6 +47,7 @@ export default function VideoShowcase() {
       setCurrentIndex(0)
     } catch (error) {
       console.error('Failed to fetch video showcase:', error)
+      // Fail silently - don't crash the page
       setItems([])
     } finally {
       setLoading(false)

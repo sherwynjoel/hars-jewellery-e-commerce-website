@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 // GET all active video showcase items (public)
 export async function GET() {
   try {
+    // Check if table exists by trying to query it
     const items = await prisma.videoShowcase.findMany({
       where: { isActive: true },
       orderBy: { position: 'asc' }
@@ -13,6 +14,12 @@ export async function GET() {
     
     return NextResponse.json(Array.isArray(items) ? items : [])
   } catch (error: any) {
+    // Handle Prisma errors gracefully (e.g., table doesn't exist)
+    if (error?.code === 'P2021' || error?.code === 'P2001' || error?.message?.includes('does not exist')) {
+      console.warn('[Video Showcase API] Table does not exist yet. Run migration.')
+      return NextResponse.json([])
+    }
+    
     console.error('[Video Showcase API] Error fetching video showcase:', error)
     console.error('[Video Showcase API] Error details:', {
       message: error?.message,
