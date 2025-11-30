@@ -9,10 +9,18 @@ export async function GET() {
       orderBy: { position: 'asc' }
     })
     
+    console.log(`[Video Showcase API] Found ${items.length} active videos`)
+    
     return NextResponse.json(Array.isArray(items) ? items : [])
   } catch (error: any) {
-    console.error('Error fetching video showcase:', error)
-    return NextResponse.json({ error: 'Failed to fetch video showcase' }, { status: 500 })
+    console.error('[Video Showcase API] Error fetching video showcase:', error)
+    console.error('[Video Showcase API] Error details:', {
+      message: error?.message,
+      code: error?.code,
+      meta: error?.meta
+    })
+    // Return empty array instead of error to prevent page break
+    return NextResponse.json([])
   }
 }
 

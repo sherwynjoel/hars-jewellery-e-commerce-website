@@ -29,9 +29,14 @@ export default function VideoShowcase() {
   const fetchVideos = async () => {
     try {
       const response = await fetch('/api/video-showcase', { cache: 'no-store' })
-      if (!response.ok) throw new Error('Failed to fetch')
+      if (!response.ok) {
+        console.error('Video Showcase API error:', response.status, response.statusText)
+        throw new Error('Failed to fetch')
+      }
       const data = await response.json()
-      setItems(Array.isArray(data) ? data : [])
+      const videoItems = Array.isArray(data) ? data : []
+      console.log('Video Showcase: Fetched items:', videoItems.length, videoItems)
+      setItems(videoItems)
       setCurrentIndex(0)
     } catch (error) {
       console.error('Failed to fetch video showcase:', error)
@@ -42,11 +47,17 @@ export default function VideoShowcase() {
   }
 
   const goToPrevious = () => {
-    setCurrentIndex((prev) => (prev - 1 + items.length) % items.length)
+    setCurrentIndex((prev) => {
+      const visibleItems = items.filter((item) => item.isActive)
+      return (prev - 1 + visibleItems.length) % visibleItems.length
+    })
   }
 
   const goToNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % items.length)
+    setCurrentIndex((prev) => {
+      const visibleItems = items.filter((item) => item.isActive)
+      return (prev + 1) % visibleItems.length
+    })
   }
 
   const togglePlay = (itemId: string) => {
@@ -86,9 +97,37 @@ export default function VideoShowcase() {
   }
 
   const visibleItems = items.filter((item) => item.isActive)
-  if (visibleItems.length === 0) return null
+  
+  // Debug logging
+  useEffect(() => {
+    const activeItems = items.filter((item) => item.isActive)
+    console.log('Video Showcase: Items:', items.length, 'Visible:', activeItems.length)
+    if (items.length > 0 && activeItems.length === 0) {
+      console.warn('Video Showcase: All items are inactive')
+    }
+  }, [items])
 
-  const currentItem = visibleItems[currentIndex]
+  // Ensure currentIndex is valid when items change
+  useEffect(() => {
+    const activeItems = items.filter((item) => item.isActive)
+    if (activeItems.length > 0 && currentIndex >= activeItems.length) {
+      setCurrentIndex(0)
+    }
+  }, [items, currentIndex])
+
+  if (visibleItems.length === 0) {
+    console.log('Video Showcase: No active videos to display')
+    return null
+  }
+
+  // Ensure currentIndex is valid
+  const safeIndex = Math.min(currentIndex, visibleItems.length - 1)
+  const currentItem = visibleItems[safeIndex]
+  
+  if (!currentItem) {
+    console.error('Video Showcase: No current item found', { safeIndex, visibleItems })
+    return null
+  }
 
   return (
     <section className="w-full py-16 bg-gradient-to-b from-gray-50 to-white">
@@ -124,14 +163,24 @@ export default function VideoShowcase() {
                 <video
                   ref={(el) => {
                     videoRefs.current[currentItem.id] = el
+                    // Auto-play when video loads
+                    if (el && !playing[currentItem.id]) {
+                      el.play().catch((err) => {
+                        console.log('Auto-play prevented:', err)
+                      })
+                    }
                   }}
                   src={currentItem.url}
                   className="w-full h-full object-cover"
                   loop
                   muted={muted[currentItem.id] ?? true}
                   playsInline
+                  autoPlay
                   onPlay={() => handleVideoPlay(currentItem.id)}
                   onPause={() => handleVideoPause(currentItem.id)}
+                  onError={(e) => {
+                    console.error('Video error:', e, currentItem.url)
+                  }}
                 />
                 
                 {/* Video Controls Overlay */}
@@ -204,7 +253,7 @@ export default function VideoShowcase() {
                     key={index}
                     onClick={() => setCurrentIndex(index)}
                     className={`rounded-full transition-all ${
-                      index === currentIndex
+                      index === safeIndex
                         ? 'bg-white h-2 w-8'
                         : 'bg-white/60 hover:bg-white/80 h-2 w-2'
                     }`}
