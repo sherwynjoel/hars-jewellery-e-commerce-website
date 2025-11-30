@@ -173,6 +173,35 @@ export async function POST(request: NextRequest) {
     console.log('Payment Verify: Order email:', order.email)
     console.log('Payment Verify: Order total:', order.total)
 
+    // Decrease stock count for each product in the order
+    console.log('Payment Verify: Decreasing stock counts...')
+    for (const orderItem of order.items) {
+      try {
+        const product = await prisma.product.findUnique({
+          where: { id: orderItem.productId },
+          select: { stockCount: true }
+        })
+
+        if (product) {
+          const newStockCount = Math.max(0, product.stockCount - orderItem.quantity)
+          const isInStock = newStockCount > 0
+
+          await prisma.product.update({
+            where: { id: orderItem.productId },
+            data: {
+              stockCount: newStockCount,
+              inStock: isInStock
+            }
+          })
+
+          console.log(`Payment Verify: Updated stock for product ${orderItem.productId}: ${product.stockCount} -> ${newStockCount}, inStock: ${isInStock}`)
+        }
+      } catch (stockError) {
+        console.error(`Payment Verify: Error updating stock for product ${orderItem.productId}:`, stockError)
+        // Don't fail the order if stock update fails, but log it
+      }
+    }
+
     // Send invoice email to customer after successful payment
     const emailToSend = (order.email || customerEmail || session.user.email || '').trim()
     

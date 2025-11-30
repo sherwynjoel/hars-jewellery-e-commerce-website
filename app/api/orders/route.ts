@@ -44,6 +44,51 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No items in cart' }, { status: 400 })
     }
 
+    // Validate stock availability before creating order
+    console.log('Order API: Validating stock availability...')
+    const productIds = items.map((item: any) => item.productId)
+    const products = await prisma.product.findMany({
+      where: { id: { in: productIds } },
+      select: {
+        id: true,
+        name: true,
+        inStock: true,
+        stockCount: true
+      }
+    })
+
+    const productMap = new Map(products.map(p => [p.id, p]))
+    const stockErrors: string[] = []
+
+    for (const item of items) {
+      const product = productMap.get(item.productId)
+      
+      if (!product) {
+        stockErrors.push(`Product ${item.productId} not found`)
+        continue
+      }
+
+      if (!product.inStock) {
+        stockErrors.push(`${product.name} is out of stock`)
+        continue
+      }
+
+      if (product.stockCount < item.quantity) {
+        stockErrors.push(`Insufficient stock for ${product.name}. Available: ${product.stockCount}, Requested: ${item.quantity}`)
+        continue
+      }
+    }
+
+    if (stockErrors.length > 0) {
+      console.error('Order API: ❌ Stock validation failed:', stockErrors)
+      return NextResponse.json({ 
+        error: 'Stock validation failed',
+        details: stockErrors
+      }, { status: 400 })
+    }
+
+    console.log('Order API: ✅ Stock validation passed')
+
     // Use the total with tax from the frontend, or calculate if not provided
     const orderTotal = total || items.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0)
     console.log('Order API: Order total:', orderTotal)
@@ -99,6 +144,35 @@ export async function POST(request: NextRequest) {
       quantity: item.quantity,
       price: item.price
     })))
+
+    // Decrease stock count for each product in the order
+    console.log('Order API: Decreasing stock counts...')
+    for (const orderItem of order.items) {
+      try {
+        const product = await prisma.product.findUnique({
+          where: { id: orderItem.productId },
+          select: { stockCount: true }
+        })
+
+        if (product) {
+          const newStockCount = Math.max(0, product.stockCount - orderItem.quantity)
+          const isInStock = newStockCount > 0
+
+          await prisma.product.update({
+            where: { id: orderItem.productId },
+            data: {
+              stockCount: newStockCount,
+              inStock: isInStock
+            }
+          })
+
+          console.log(`Order API: Updated stock for product ${orderItem.productId}: ${product.stockCount} -> ${newStockCount}, inStock: ${isInStock}`)
+        }
+      } catch (stockError) {
+        console.error(`Order API: Error updating stock for product ${orderItem.productId}:`, stockError)
+        // Don't fail the order if stock update fails, but log it
+      }
+    }
 
     // Send invoice email to customer
     const emailToSend = (order.email || customerEmail || session.user.email || '').trim()
