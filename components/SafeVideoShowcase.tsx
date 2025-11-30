@@ -27,7 +27,7 @@ class SafeVideoShowcase extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
-      // Show a visible section even on error so user knows it exists
+      // Show error state instead of nothing
       return (
         <section className="w-full py-16 bg-gradient-to-b from-gray-50 to-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -39,13 +39,11 @@ class SafeVideoShowcase extends Component<Props, State> {
                 Discover our exquisite range of handcrafted jewelry pieces.
               </p>
             </div>
-            <div className="relative">
-              <div className="relative w-full bg-red-50 border-2 border-red-200 rounded-2xl overflow-hidden" style={{ aspectRatio: '16/9' }}>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center">
-                    <p className="text-red-600 text-lg mb-2 font-semibold">Video Showcase Error</p>
-                    <p className="text-red-500 text-sm">Check browser console for details</p>
-                  </div>
+            <div className="relative w-full bg-gray-100 rounded-2xl overflow-hidden" style={{ aspectRatio: '16/9' }}>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center">
+                  <p className="text-gray-500 text-lg mb-2">Video section temporarily unavailable</p>
+                  <p className="text-gray-400 text-sm">Please check the console for errors</p>
                 </div>
               </div>
             </div>
