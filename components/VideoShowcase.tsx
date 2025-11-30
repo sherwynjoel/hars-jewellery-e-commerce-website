@@ -22,6 +22,9 @@ export default function VideoShowcase() {
   const [muted, setMuted] = useState<{ [key: string]: boolean }>({})
   const videoRefs = useRef<{ [key: string]: HTMLVideoElement | null }>({})
 
+  // Always log that component is rendering
+  console.log('VideoShowcase: Component rendering', { loading, itemsCount: items.length })
+
   useEffect(() => {
     console.log('VideoShowcase: Component mounted, fetching videos...')
     fetchVideos()
