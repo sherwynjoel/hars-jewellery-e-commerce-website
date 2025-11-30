@@ -23,6 +23,7 @@ export default function VideoShowcase() {
   const videoRefs = useRef<{ [key: string]: HTMLVideoElement | null }>({})
 
   useEffect(() => {
+    console.log('VideoShowcase: Component mounted, fetching videos...')
     fetchVideos()
   }, [])
 
