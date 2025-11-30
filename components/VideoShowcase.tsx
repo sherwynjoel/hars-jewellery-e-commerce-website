@@ -151,8 +151,12 @@ export default function VideoShowcase() {
               Discover our exquisite range of handcrafted jewelry pieces.
             </p>
           </div>
-          <div className="w-full flex items-center justify-center" style={{ aspectRatio: '9/16', maxWidth: '400px', margin: '0 auto' }}>
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
+          <div className="w-full flex items-center justify-center px-4">
+            <div className="relative w-full max-w-[280px] sm:max-w-[320px] md:max-w-[360px] lg:max-w-[400px]" style={{ aspectRatio: '9/16' }}>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -191,12 +195,12 @@ export default function VideoShowcase() {
             </p>
           </motion.div>
           
-          <div className="relative flex justify-center">
-            <div className="relative w-full bg-gray-100 rounded-2xl overflow-hidden" style={{ aspectRatio: '9/16', maxWidth: '400px' }}>
+          <div className="relative flex justify-center px-4">
+            <div className="relative w-full max-w-[280px] sm:max-w-[320px] md:max-w-[360px] lg:max-w-[400px] bg-gray-100 rounded-2xl overflow-hidden" style={{ aspectRatio: '9/16' }}>
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center">
-                  <p className="text-gray-500 text-lg mb-2">No videos available</p>
-                  <p className="text-gray-400 text-sm">Add videos in the admin panel to display them here</p>
+                <div className="text-center px-4">
+                  <p className="text-gray-500 text-base sm:text-lg mb-2">No videos available</p>
+                  <p className="text-gray-400 text-xs sm:text-sm">Add videos in the admin panel to display them here</p>
                 </div>
               </div>
             </div>
@@ -245,8 +249,8 @@ export default function VideoShowcase() {
         </motion.div>
 
         {/* Video Carousel Container */}
-        <div className="relative flex justify-center">
-          <div className="relative w-full" style={{ aspectRatio: '9/16', maxWidth: '400px' }}>
+        <div className="relative flex justify-center px-4">
+          <div className="relative w-full max-w-[280px] sm:max-w-[320px] md:max-w-[360px] lg:max-w-[400px]" style={{ aspectRatio: '9/16' }}>
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentItem.id}
@@ -281,38 +285,38 @@ export default function VideoShowcase() {
                 
                 {/* Video Controls Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent">
-                  <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between z-40">
-                    <div className="flex items-center gap-2 bg-black/50 backdrop-blur-sm rounded-lg px-4 py-2">
+                  <div className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 right-2 sm:right-4 flex items-center justify-between z-40">
+                    <div className="flex items-center gap-1 sm:gap-2 bg-black/50 backdrop-blur-sm rounded-lg px-2 sm:px-4 py-1.5 sm:py-2">
                       <button
                         onClick={() => togglePlay(currentItem.id)}
                         className="text-white hover:text-gray-200 transition-colors"
                         aria-label={playing[currentItem.id] ? 'Pause' : 'Play'}
                       >
                         {playing[currentItem.id] ? (
-                          <Pause className="w-5 h-5" />
+                          <Pause className="w-4 h-4 sm:w-5 sm:h-5" />
                         ) : (
-                          <Play className="w-5 h-5" />
+                          <Play className="w-4 h-4 sm:w-5 sm:h-5" />
                         )}
                       </button>
                       <button
                         onClick={() => toggleMute(currentItem.id)}
-                        className="text-white hover:text-gray-200 transition-colors ml-2"
+                        className="text-white hover:text-gray-200 transition-colors ml-1 sm:ml-2"
                         aria-label={muted[currentItem.id] ? 'Unmute' : 'Mute'}
                       >
                         {muted[currentItem.id] ? (
-                          <VolumeX className="w-5 h-5" />
+                          <VolumeX className="w-4 h-4 sm:w-5 sm:h-5" />
                         ) : (
-                          <Volume2 className="w-5 h-5" />
+                          <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />
                         )}
                       </button>
                     </div>
                     {(currentItem.title || currentItem.subtitle) && (
-                      <div className="bg-black/50 backdrop-blur-sm rounded-lg px-4 py-2">
+                      <div className="bg-black/50 backdrop-blur-sm rounded-lg px-2 sm:px-4 py-1.5 sm:py-2 hidden xs:block">
                         {currentItem.title && (
-                          <p className="text-white text-sm font-medium">{currentItem.title}</p>
+                          <p className="text-white text-xs sm:text-sm font-medium">{currentItem.title}</p>
                         )}
                         {currentItem.subtitle && (
-                          <p className="text-white text-xs opacity-80">{currentItem.subtitle}</p>
+                          <p className="text-white text-[10px] sm:text-xs opacity-80">{currentItem.subtitle}</p>
                         )}
                       </div>
                     )}
@@ -326,24 +330,24 @@ export default function VideoShowcase() {
               <>
                 <button
                   onClick={goToPrevious}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-black p-3 rounded-full shadow-lg transition-all z-50 active:scale-95"
+                  className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-black p-2 sm:p-3 rounded-full shadow-lg transition-all z-50 active:scale-95"
                   aria-label="Previous"
                 >
-                  <ChevronLeft className="w-6 h-6" />
+                  <ChevronLeft className="w-4 h-4 sm:w-6 sm:h-6" />
                 </button>
                 <button
                   onClick={goToNext}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-black p-3 rounded-full shadow-lg transition-all z-50 active:scale-95"
+                  className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-black p-2 sm:p-3 rounded-full shadow-lg transition-all z-50 active:scale-95"
                   aria-label="Next"
                 >
-                  <ChevronRight className="w-6 h-6" />
+                  <ChevronRight className="w-4 h-4 sm:w-6 sm:h-6" />
                 </button>
               </>
             )}
 
             {/* Dots Indicator */}
             {visibleItems.length > 1 && (
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 z-50">
+              <div className="absolute bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 sm:gap-2 z-50">
                 {visibleItems.map((_, index) => (
                   <button
                     key={index}
