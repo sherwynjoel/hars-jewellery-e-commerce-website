@@ -16,6 +16,8 @@ import { useEffect, useState } from 'react'
 
 export default function HomePage() {
   const [goldPrice, setGoldPrice] = useState<number | null>(null)
+  const [goldPriceDate, setGoldPriceDate] = useState<Date | null>(null)
+  const [isTodayPrice, setIsTodayPrice] = useState<boolean>(true)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -23,6 +25,8 @@ export default function HomePage() {
     fetch('/api/gold-price').then(async (r) => {
       const d = await r.json()
       setGoldPrice(d?.pricePerGram ?? null)
+      setGoldPriceDate(d?.date ? new Date(d.date) : null)
+      setIsTodayPrice(d?.isToday ?? false)
     }).catch(() => {})
   }, [])
   return (
@@ -54,14 +58,23 @@ export default function HomePage() {
                       />
                     </div>
                     <div>
-                      <p className="text-white/90 text-sm font-medium mb-1">Today's Gold Price</p>
+                      <p className="text-white/90 text-sm font-medium mb-1">
+                        {isTodayPrice ? "Today's Gold Price" : "Gold Price"}
+                      </p>
                       <p className="text-white text-3xl sm:text-4xl font-bold">₹{goldPrice.toLocaleString('en-IN')} <span className="text-xl sm:text-2xl font-normal">per gram</span></p>
                     </div>
                   </div>
                   <div className="hidden sm:block w-px h-16 bg-white/30"></div>
                   <div className="hidden sm:block text-white/90 text-sm bg-white/10 backdrop-blur-sm px-4 py-3 rounded-2xl border border-white/20">
                     <p className="font-bold text-white">Live Price</p>
-                    <p className="text-xs mt-1 text-white/80">Updated daily</p>
+                    <p className="text-xs mt-1 text-white/80">
+                      {isTodayPrice 
+                        ? "Updated daily" 
+                        : goldPriceDate 
+                          ? `Last updated: ${goldPriceDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`
+                          : "Updated daily"
+                      }
+                    </p>
                   </div>
                 </div>
               </div>
