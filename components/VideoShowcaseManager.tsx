@@ -237,6 +237,11 @@ export default function VideoShowcaseManager() {
       if (!response.ok) throw new Error()
       toast.success(`Video ${!currentStatus ? 'activated' : 'deactivated'}`)
       fetchItems()
+      
+      // Trigger refresh on homepage
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('video-showcase-updated'))
+      }
     } catch (error) {
       toast.error('Failed to update video status')
     }
