@@ -23,8 +23,14 @@ export default function VideoShowcase() {
   const videoRefs = useRef<{ [key: string]: HTMLVideoElement | null }>({})
 
   useEffect(() => {
-    console.log('VideoShowcase: Component mounted, starting to fetch videos...')
-    fetchVideos()
+    try {
+      console.log('VideoShowcase: Component mounted, starting to fetch videos...')
+      fetchVideos()
+    } catch (error) {
+      console.error('VideoShowcase: Error in useEffect:', error)
+      setLoading(false)
+      setItems([])
+    }
   }, [])
 
   const fetchVideos = async () => {
@@ -113,11 +119,28 @@ export default function VideoShowcase() {
   }
 
   if (loading) {
-    return (
-      <div className="w-full py-20 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
-      </div>
-    )
+    try {
+      return (
+        <section className="w-full py-16 bg-gradient-to-b from-gray-50 to-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-dark-900 mb-4">
+                Our Collection
+              </h2>
+              <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto">
+                Discover our exquisite range of handcrafted jewelry pieces.
+              </p>
+            </div>
+            <div className="w-full flex items-center justify-center" style={{ aspectRatio: '16/9' }}>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
+            </div>
+          </div>
+        </section>
+      )
+    } catch (error) {
+      console.error('VideoShowcase: Error rendering loading state:', error)
+      return null
+    }
   }
 
   const visibleItems = items.filter((item) => item.isActive)
