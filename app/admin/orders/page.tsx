@@ -4,9 +4,10 @@ import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Navigation from '@/components/Navigation'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
-import { CheckCircle, XCircle, Shield, FileText, Download } from 'lucide-react'
+import { CheckCircle, XCircle, Shield, FileText, Download, AlertTriangle } from 'lucide-react'
+import { useAdminInactivity } from '@/lib/hooks/useAdminInactivity'
 
 interface AdminOrderItem {
   id: string
@@ -77,6 +78,9 @@ export default function AdminOrdersPage() {
   const [loading, setLoading] = useState(true)
   const [filterStatus, setFilterStatus] = useState<string>('PROCESSING')
   const [openInvoiceId, setOpenInvoiceId] = useState<string | null>(null)
+  
+  // Admin inactivity tracking
+  const { shouldShowWarning, remainingMinutes, remainingSeconds } = useAdminInactivity()
 
   useEffect(() => {
     if (status === 'loading') return
@@ -146,7 +150,33 @@ export default function AdminOrdersPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
-      <div className="pt-20 sm:pt-24">
+      
+      {/* Inactivity Warning Banner */}
+      <AnimatePresence>
+        {shouldShowWarning && (
+          <motion.div
+            initial={{ y: -100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -100, opacity: 0 }}
+            className="fixed top-0 left-0 right-0 z-50 bg-yellow-500 text-white px-4 py-3 shadow-lg"
+          >
+            <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+                <div>
+                  <p className="font-semibold">Session Timeout Warning</p>
+                  <p className="text-sm text-yellow-100">
+                    For security, the admin session expires every 30 minutes. You will be logged out in{' '}
+                    {remainingMinutes}:{remainingSeconds.toString().padStart(2, '0')}. Please save your work and sign in again if needed.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      <div className={`pt-20 sm:pt-24 ${shouldShowWarning ? 'pt-32 sm:pt-36' : ''}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-serif font-bold">Orders Management</h1>

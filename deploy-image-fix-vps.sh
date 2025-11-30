@@ -120,3 +120,6 @@ echo "=== Deployment complete! ==="
 echo "Now try uploading a new product image in the admin panel."
 echo "It should appear immediately without needing to restart PM2."
 
+
+
+

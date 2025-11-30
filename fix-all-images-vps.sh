@@ -80,3 +80,6 @@ echo "=== Fix complete! ==="
 echo "All image URLs have been updated to use the API route."
 echo "Check your homepage - all images should now appear."
 
+
+
+

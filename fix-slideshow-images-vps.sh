@@ -37,3 +37,6 @@ echo ""
 echo "=== Fix complete! ==="
 echo "Check your homepage now - slideshow images should appear."
 
+
+
+
