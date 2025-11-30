@@ -247,8 +247,8 @@ export default function VideoShowcaseManager() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">Video Showcase (16:9)</h3>
-          <p className="text-sm text-gray-500">Manage 16:9 ratio videos for homepage showcase (max 50 seconds)</p>
+          <h3 className="text-lg font-semibold text-gray-900">Video Showcase (9:16)</h3>
+          <p className="text-sm text-gray-500">Manage 9:16 ratio videos for homepage showcase (max 50 seconds)</p>
         </div>
       </div>
 
@@ -256,7 +256,7 @@ export default function VideoShowcaseManager() {
       <form onSubmit={handleSubmit} className="bg-gray-50 rounded-lg p-6 space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Upload Video File (Max 50 seconds, 16:9 ratio recommended)
+            Upload Video File (Max 50 seconds, 9:16 ratio recommended)
           </label>
           <input
             id="video-showcase-file"

@@ -151,7 +151,7 @@ export default function VideoShowcase() {
               Discover our exquisite range of handcrafted jewelry pieces.
             </p>
           </div>
-          <div className="w-full flex items-center justify-center" style={{ aspectRatio: '16/9' }}>
+          <div className="w-full flex items-center justify-center" style={{ aspectRatio: '9/16', maxWidth: '400px', margin: '0 auto' }}>
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
           </div>
         </div>
@@ -191,8 +191,8 @@ export default function VideoShowcase() {
             </p>
           </motion.div>
           
-          <div className="relative">
-            <div className="relative w-full bg-gray-100 rounded-2xl overflow-hidden" style={{ aspectRatio: '16/9' }}>
+          <div className="relative flex justify-center">
+            <div className="relative w-full bg-gray-100 rounded-2xl overflow-hidden" style={{ aspectRatio: '9/16', maxWidth: '400px' }}>
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center">
                   <p className="text-gray-500 text-lg mb-2">No videos available</p>
@@ -245,8 +245,8 @@ export default function VideoShowcase() {
         </motion.div>
 
         {/* Video Carousel Container */}
-        <div className="relative">
-          <div className="relative w-full" style={{ aspectRatio: '16/9' }}>
+        <div className="relative flex justify-center">
+          <div className="relative w-full" style={{ aspectRatio: '9/16', maxWidth: '400px' }}>
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentItem.id}
