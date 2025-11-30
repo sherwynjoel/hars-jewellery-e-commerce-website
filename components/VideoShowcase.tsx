@@ -138,6 +138,7 @@ export default function VideoShowcase() {
     }
   }, [items, currentIndex])
 
+  // Always show the section, even if no videos
   if (visibleItems.length === 0) {
     // Show helpful message in development or if there are items but they're inactive
     if (items.length > 0) {
@@ -149,7 +150,39 @@ export default function VideoShowcase() {
     } else {
       console.log('Video Showcase: No videos found. Add videos in admin panel.')
     }
-    return null
+    
+    // Show empty state instead of returning null
+    return (
+      <section className="w-full py-16 bg-gradient-to-b from-gray-50 to-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-dark-900 mb-4">
+              Our Collection
+            </h2>
+            <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto">
+              Discover our exquisite range of handcrafted jewelry pieces.
+            </p>
+          </motion.div>
+          
+          <div className="relative">
+            <div className="relative w-full bg-gray-100 rounded-2xl overflow-hidden" style={{ aspectRatio: '16/9' }}>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center">
+                  <p className="text-gray-500 text-lg mb-2">No videos available</p>
+                  <p className="text-gray-400 text-sm">Add videos in the admin panel to display them here</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    )
   }
 
   // Ensure currentIndex is valid
