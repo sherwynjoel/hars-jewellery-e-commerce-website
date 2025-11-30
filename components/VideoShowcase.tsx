@@ -26,6 +26,22 @@ export default function VideoShowcase() {
     try {
       console.log('VideoShowcase: Component mounted, starting to fetch videos...')
       fetchVideos()
+      
+      // Listen for video updates from admin panel
+      const handleVideoUpdate = () => {
+        console.log('VideoShowcase: Video updated, refetching...')
+        fetchVideos()
+      }
+      
+      if (typeof window !== 'undefined') {
+        window.addEventListener('video-showcase-updated', handleVideoUpdate)
+      }
+      
+      return () => {
+        if (typeof window !== 'undefined') {
+          window.removeEventListener('video-showcase-updated', handleVideoUpdate)
+        }
+      }
     } catch (error) {
       console.error('VideoShowcase: Error in useEffect:', error)
       setLoading(false)
