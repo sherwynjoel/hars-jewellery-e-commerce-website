@@ -10,7 +10,7 @@ import Footer from '@/components/Footer'
 import HeroSlideshow from '@/components/HeroSlideshow'
 import VideoCarousel from '@/components/VideoCarousel'
 import Testimonials from '@/components/Testimonials'
-import VideoShowcase from '@/components/VideoShowcase'
+import SafeVideoShowcase from '@/components/SafeVideoShowcase'
 import EditorialShowcase from '@/components/EditorialShowcase'
 import { useEffect, useState } from 'react'
 
@@ -194,7 +194,7 @@ export default function HomePage() {
       <Testimonials />
 
       {/* Video Showcase Section */}
-      <VideoShowcase />
+      <SafeVideoShowcase />
 
       <Footer />
     </div>
