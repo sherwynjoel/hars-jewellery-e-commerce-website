@@ -35,7 +35,14 @@ export default function VideoShowcase() {
 
   const fetchVideos = async () => {
     try {
-      const response = await fetch('/api/video-showcase', { cache: 'no-store' })
+      // Add timestamp to prevent caching
+      const timestamp = new Date().getTime()
+      const response = await fetch(`/api/video-showcase?t=${timestamp}`, { 
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      })
       if (!response.ok) {
         // If 500 error, likely database table doesn't exist - fail silently
         if (response.status === 500) {

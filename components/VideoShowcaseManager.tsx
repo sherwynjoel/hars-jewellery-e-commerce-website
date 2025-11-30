@@ -155,6 +155,13 @@ export default function VideoShowcaseManager() {
         inputElement.value = ''
       }
       fetchItems()
+      
+      // Force refresh the homepage to show new video
+      // This will trigger a re-fetch on the homepage
+      if (typeof window !== 'undefined') {
+        // Dispatch a custom event that the homepage can listen to
+        window.dispatchEvent(new Event('video-showcase-updated'))
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to add video')
     } finally {
